@@ -1,0 +1,4 @@
+Name: Fire Weather app
+Description: Runs shiny app for fire weather analysis.
+Binding: app
+Interactive: true
