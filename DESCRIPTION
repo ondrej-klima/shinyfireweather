@@ -20,4 +20,5 @@ Imports:
     shinybusy,
     shinydashboard,
     stringr,
+    tidyr,
     tools

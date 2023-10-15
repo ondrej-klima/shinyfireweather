@@ -118,7 +118,7 @@ editDataServer <- function(id, data1 = NULL, data2 = NULL) {
     }
 
     shiny::observeEvent(input$buttonJoin, {
-      data(left_join(data2$data(), data1$data(), by=input$joinCols))
+      data(dplyr::left_join(data2$data(), data1$data(), by=input$joinCols))
       loadTable()
     })
 
@@ -165,7 +165,7 @@ editDataServer <- function(id, data1 = NULL, data2 = NULL) {
           lst[[i]] <- getMeteoData(input$uploadMultiple[[i, 'datapath']], name)
         }
       })
-      data(bind_rows(lst))
+      data(dplyr::bind_rows(lst))
       loadTable()
     })
 
@@ -225,7 +225,9 @@ editDataServer <- function(id, data1 = NULL, data2 = NULL) {
 
     shiny::observeEvent(input$buttonAggregate, {
       if(length(input$buttonAggregate) > 0) {
-        data(data() %>% dplyr::summarize(n = n(), .by = input$aggregateCols))
+        data(data() %>%
+               dplyr::group_by_at(input$aggregateCols) %>%
+               dplyr::summarize(n = dplyr::n()))
         loadTable()
       }
     })
@@ -280,7 +282,7 @@ editDataServer <- function(id, data1 = NULL, data2 = NULL) {
       var <- colnames(db())[1]
       varSrc <- input$selectCol2
       data(data() %>% dplyr::mutate(
-        "{var}" := coalesce(.data[[var]], .data[[varSrc]]))
+        "{var}" := dplyr::coalesce(.data[[var]], .data[[varSrc]]))
         )
       DT::replaceData(proxy, data(), resetPaging = FALSE)
     })
@@ -288,7 +290,7 @@ editDataServer <- function(id, data1 = NULL, data2 = NULL) {
     shiny::observeEvent(input$buttonFill0, {
       var <- colnames(db())[1]
       data(data() %>% dplyr::mutate(
-        "{var}" := coalesce(as.double(.data[[var]]), 0))
+        "{var}" := dplyr::coalesce(as.double(.data[[var]]), 0))
       )
       DT::replaceData(proxy, data(), resetPaging = FALSE)
     })
@@ -347,7 +349,7 @@ editDataServer <- function(id, data1 = NULL, data2 = NULL) {
         data(data() %>% dplyr::mutate("{var}" := ifelse(
           grepl(accentless(areas[an]), accentless(.data[[var]]), fixed = TRUE),
           an,
-          .data[[var]])) %>% mutate("{var}" := ifelse(
+          .data[[var]])) %>% dplyr::mutate("{var}" := ifelse(
             grepl(an, .data[[var]], fixed = TRUE),
             an,
             .data[[var]])
