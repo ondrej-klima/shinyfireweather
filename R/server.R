@@ -7,9 +7,11 @@
 #' @param session Shiny stuff
 
 server <- function(input, output, session) {
-  dataFire <- editDataServer('xxx')
-  dataWeather <- editDataServer('yyy')
-  editDataServer('zzz', dataFire, dataWeather)
+  dataFire <- editDataServer('xxx', exampleData = fires)
+  dataWeather <- editDataServer('yyy', exampleData = weather)
+  editDataServer('zzz', exampleData = joined,
+                 data1 = dataFire,
+                 data2 = dataWeather)
 
   # https://www.jla-data.net/cze/package-rczechia/
   output$map <- leaflet::renderLeaflet({

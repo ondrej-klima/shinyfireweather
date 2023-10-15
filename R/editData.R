@@ -43,7 +43,7 @@ editDataUi <- function(id) {
 #' This function provides server for the data edit table.
 #' @importFrom magrittr "%>%"
 #'
-editDataServer <- function(id, data1 = NULL, data2 = NULL) {
+editDataServer <- function(id, exampleData=NULL, data1 = NULL, data2 = NULL) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- shiny::reactiveVal()
     datanames <- shiny::reactiveVal()
@@ -116,6 +116,11 @@ editDataServer <- function(id, data1 = NULL, data2 = NULL) {
         })
       })
     }
+
+    shiny::observeEvent(input$loadExample, {
+      data(exampleData)
+      loadTable()
+    })
 
     shiny::observeEvent(input$buttonJoin, {
       data(dplyr::left_join(data2$data(), data1$data(), by=input$joinCols))
