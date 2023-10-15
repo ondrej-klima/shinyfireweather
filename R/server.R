@@ -7,9 +7,9 @@
 #' @param session Shiny stuff
 
 server <- function(input, output, session) {
-  dataFire <- editDataServer('xxx', exampleData = fires)
-  dataWeather <- editDataServer('yyy', exampleData = weather)
-  editDataServer('zzz', exampleData = joined,
+  dataFire <- editDataServer('xxx', exampleData = shinyfireweather::fires)
+  dataWeather <- editDataServer('yyy', exampleData = shinyfireweather::weather)
+  editDataServer('zzz', exampleData = shinyfireweather::joined,
                  data1 = dataFire,
                  data2 = dataWeather)
 
