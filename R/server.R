@@ -9,9 +9,11 @@
 server <- function(input, output, session) {
   dataFire <- editDataServer('xxx', exampleData = shinyfireweather::fires)
   dataWeather <- editDataServer('yyy', exampleData = shinyfireweather::weather)
-  editDataServer('zzz', exampleData = shinyfireweather::joined,
+  joinedData <- editDataServer('zzz', exampleData = shinyfireweather::joined,
                  data1 = dataFire,
                  data2 = dataWeather)
+
+  setupModel <- setupModelServer('model', joinedData)
 
   # https://www.jla-data.net/cze/package-rczechia/
   output$map <- leaflet::renderLeaflet({

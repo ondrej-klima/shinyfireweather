@@ -19,6 +19,10 @@ ui <- function() {
                              tabName = "tabJoinedData",
                              icon = shiny::icon("table"))
         ),
+        shinydashboard::menuItem("Model",
+                                 icon = shiny::icon("chart-line"),
+                                 tabName = "tabModel"),
+
         shinydashboard::menuItem("Map",
                                  icon = shiny::icon("map"), tabName = "tabMap")
       )
@@ -36,6 +40,7 @@ ui <- function() {
         shinydashboard::tabItem(tabName = 'tabJoinedData',
                 editDataUi('zzz')
         ),
+        shinydashboard::tabItem(tabName = 'tabModel', setupModelUi('model')),
         shinydashboard::tabItem(tabName = 'tabMap',
                 leaflet::leafletOutput('map')
         )
