@@ -201,10 +201,12 @@ editDataServer <- function(id, exampleData=NULL, data1 = NULL, data2 = NULL) {
                              datanames(),
                              selected = selcol()),
           shiny::actionButton(shiny::NS(id, 'buttonDate'), 'Fix Date'),
+          shiny::actionButton(shiny::NS(id, 'buttonDateSplit'), 'Split date'),
           shiny::actionButton(shiny::NS(id, 'buttonArea'), 'Fix Area'),
           shiny::actionButton(shiny::NS(id, 'buttonDuplicate'), 'Duplicate'),
           shiny::actionButton(shiny::NS(id, 'buttonDrop'), 'Drop'),
           shiny::actionButton(shiny::NS(id, 'buttonRename'), 'Rename'),
+          shiny::actionButton(shiny::NS(id, 'buttonRLE'), 'RLE'),
           shiny::textInput(shiny::NS(id, 'name'), NULL, 'new_col_name'),
           shiny::selectInput(shiny::NS(id, 'selectCol2'),
                              'Source Column',
@@ -260,6 +262,21 @@ editDataServer <- function(id, exampleData=NULL, data1 = NULL, data2 = NULL) {
       data(data() %>% dplyr::mutate("{var}" := as.character(
         openxlsx::convertToDate(.data[[var]]))))
       DT::replaceData(proxy, data(), resetPaging = FALSE)
+    })
+
+    shiny::observeEvent(input$buttonDateSplit, {
+      var <- colnames(db())[1]
+      data(data() %>%
+            dplyr::mutate(day=as.factor(stringr::str_sub(date, 9, 10))) %>%
+            dplyr::mutate(month=as.factor(stringr::str_sub(date, 6, 7))) %>%
+            dplyr::mutate(year=as.factor(stringr::str_sub(date, 1, 4)))
+          )
+      selcol(input$name)
+      output$dtable <- DT::renderDT({
+        shiny::isolate({
+          DT::datatable(data(), options = list(scrollX = TRUE))
+        })
+      })
     })
 
     shiny::observeEvent(input$buttonFilter, {
@@ -326,6 +343,21 @@ editDataServer <- function(id, exampleData=NULL, data1 = NULL, data2 = NULL) {
           })
         })
       }
+    })
+
+    shiny::observeEvent(input$buttonRLE, {
+      var <- colnames(db())[1]
+      data(data() %>%
+             dplyr::group_by(area) %>%
+             dplyr::arrange(date) %>%
+             dplyr::mutate("{input$name}" := (.data[[var]] == 0) * unlist(lapply(rle(.data[[var]] != 0)$lengths, seq_len)))
+           )
+      selcol(input$name)
+      output$dtable <- DT::renderDT({
+        shiny::isolate({
+          DT::datatable(data(), options = list(scrollX = TRUE))
+        })
+      })
     })
 
     shiny::observeEvent(input$buttonDrop, {
