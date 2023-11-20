@@ -9,10 +9,22 @@ setupModelUi <- function(id) {
 
 
     shinydashboard::tabBox(title = "Retrieve Model", width = 12,
-                           shiny::tabPanel('Create', shiny::uiOutput(shiny::NS(id, "checkboxUi"))),
+                           shiny::tabPanel('Create', shiny::uiOutput(
+                             shiny::NS(id, "checkboxUi"))
+                           ),
                            shiny::tabPanel('Load', DT::DTOutput(
-                             shiny::NS(id, "coltable")))
-
+                             shiny::NS(id, "coltable"))
+                           ),
+                           shiny::tabPanel('Summary', shiny::verbatimTextOutput(
+                             shiny::NS(id, "summary"))
+                           ),
+                           shiny::tabPanel('Anova', shiny::verbatimTextOutput(
+                             shiny::NS(id, "anova"))
+                           ),
+                           shiny::tabPanel('Accuracy', htmltools::tagList(
+                             shiny::tableOutput(shiny::NS(id, 'tab')),
+                             shiny::verbatimTextOutput(shiny::NS(id, 'acc'))
+                           ))
     )
   )
 }
@@ -64,12 +76,30 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
                      "Data 3" = data3$data(),
                      "Data 4" = data4$data())
 
-      print(input$cols)
-      print(paste(input$cols, collapse="+"))
       formula <- as.formula(
         sprintf("%s~%s", input$var, paste(input$cols, collapse="+"))
       )
-      mod.glm <- glm(formula, family=poisson(link = "log"), data=data)
+      mod1.glm <- glm(formula, family=poisson(link = "log"), data=as.data.frame(data))
+
+      output$summary <- renderPrint({
+        summary(mod1.glm)
+      })
+
+      output$anova <- renderPrint({
+        anova(mod1.glm, test="Chisq")
+      })
+
+      dt <- matrix(data = c(
+        as.character(1 - mod1.glm$deviance / mod1.glm$null.deviance),
+        as.character(rcompanion::efronRSquared(mod1.glm))
+      ), ncol = 2)
+
+
+      colnames(dt) <- c('Explained Deviance (0 - 1)',
+                        'Efron R Square')
+
+      output$tab <- renderTable(dt)
+      output$acc <- renderPrint(rcompanion::accuracy(mod1.glm))
     })
   })
   # https://stackoverflow.com/questions/42454097/dynamic-number-of-x-values-dependent-variables-in-glm-function-in-r-isnt-givi

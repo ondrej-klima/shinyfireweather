@@ -21,7 +21,8 @@ Imports:
     shinydashboard,
     stringr,
     tidyr,
-    tools
+    tools,
+    rcompanion
 Depends: 
     R (>= 2.10)
 LazyData: true
