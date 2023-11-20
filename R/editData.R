@@ -43,7 +43,12 @@ editDataUi <- function(id) {
 #' This function provides server for the data edit table.
 #' @importFrom magrittr "%>%"
 #'
-editDataServer <- function(id, exampleData=NULL, data1 = NULL, data2 = NULL) {
+editDataServer <- function(id,
+                           exampleData=NULL,
+                           data1 = NULL,
+                           data2 = NULL,
+                           data3 = NULL,
+                           data4 = NULL) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- shiny::reactiveVal()
     datanames <- shiny::reactiveVal()
@@ -82,6 +87,16 @@ editDataServer <- function(id, exampleData=NULL, data1 = NULL, data2 = NULL) {
       shiny::actionButton(shiny::NS(id, "loadenv"), "Load")
       )
 
+      tabData <- shiny::tabPanel("Data", htmltools::tagList(
+        shiny::selectInput(
+          shiny::NS(id, "dataChoice"),
+          "Import Table From",
+          choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+        )
+      ),
+      shiny::actionButton(shiny::NS(id, "importTabButton"), "Import")
+      )
+
       if(!is.null(data1) && !is.null(data2)) {
         tabJoin <- shiny::tabPanel("Join data", htmltools::tagList(
           shiny::checkboxGroupInput(shiny::NS(id,"joinCols"),
@@ -95,7 +110,8 @@ editDataServer <- function(id, exampleData=NULL, data1 = NULL, data2 = NULL) {
                tabJoin,
                tabSingleFile,
                tabMultipleFile,
-               tabVariable
+               tabVariable,
+               tabData
         )
       }
       else {
@@ -103,7 +119,8 @@ editDataServer <- function(id, exampleData=NULL, data1 = NULL, data2 = NULL) {
                tabExample,
                tabSingleFile,
                tabMultipleFile,
-               tabVariable
+               tabVariable,
+               tabData
         )
       }
     })
@@ -186,7 +203,14 @@ editDataServer <- function(id, exampleData=NULL, data1 = NULL, data2 = NULL) {
             x <- openxlsx::read.xlsx(input$upload$datapath,
                                      sheet=sheet,
                                      startRow=1)
-            r <- merge(r, x, all=TRUE)
+
+            if(sheet == input$checkboxes[1]) {
+              r <- x
+            }
+            else {
+              r <- merge(r, x, all=TRUE)
+            }
+            # browser()
           }
         })
         r
@@ -239,6 +263,15 @@ editDataServer <- function(id, exampleData=NULL, data1 = NULL, data2 = NULL) {
       }
     })
 
+    shiny::observeEvent(input$importTabButton, {
+      data(switch(input$dataChoice,
+                  "Data 1" = data1$data(),
+                  "Data 2" = data2$data(),
+                  "Data 3" = data3$data(),
+                  "Data 4" = data4$data()))
+      loadTable()
+    })
+
     db <- shiny::reactive({
       shiny::req(data)
       shiny::req(input$selectInput)
@@ -267,9 +300,9 @@ editDataServer <- function(id, exampleData=NULL, data1 = NULL, data2 = NULL) {
     shiny::observeEvent(input$buttonDateSplit, {
       var <- colnames(db())[1]
       data(data() %>%
-            dplyr::mutate(day=as.factor(stringr::str_sub(date, 9, 10))) %>%
-            dplyr::mutate(month=as.factor(stringr::str_sub(date, 6, 7))) %>%
-            dplyr::mutate(year=as.factor(stringr::str_sub(date, 1, 4)))
+            dplyr::mutate(day=as.factor(stringr::str_sub(as.character(date), 9, 10))) %>%
+            dplyr::mutate(month=as.factor(stringr::str_sub(as.character(date), 6, 7))) %>%
+            dplyr::mutate(year=as.factor(stringr::str_sub(as.character(date), 1, 4)))
           )
       selcol(input$name)
       output$dtable <- DT::renderDT({

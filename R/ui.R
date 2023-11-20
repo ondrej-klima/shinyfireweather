@@ -9,14 +9,17 @@ ui <- function() {
       shinydashboard::sidebarMenu(
         shinydashboard::menuItem("Data", icon = shiny::icon("database"),
                                  startExpanded = TRUE,
-           shinydashboard::menuSubItem("Fire events",
-                             tabName = "tabFireData",
-                             icon = shiny::icon("fire")),
-           shinydashboard::menuSubItem("Weather",
-                             tabName = "tabWeatherData",
-                             icon = shiny::icon("sun")),
-           shinydashboard::menuSubItem("Joined data",
-                             tabName = "tabJoinedData",
+           shinydashboard::menuSubItem("Data 1",
+                             tabName = "tabData1",
+                             icon = shiny::icon("table")),
+           shinydashboard::menuSubItem("Data 2",
+                             tabName = "tabData2",
+                             icon = shiny::icon("table")),
+           shinydashboard::menuSubItem("Data 3",
+                             tabName = "tabData3",
+                             icon = shiny::icon("table")),
+           shinydashboard::menuSubItem("Data 4",
+                             tabName = "tabData4",
                              icon = shiny::icon("table"))
         ),
         shinydashboard::menuItem("Model",
@@ -29,16 +32,19 @@ ui <- function() {
     ),
     shinydashboard::dashboardBody(
       shinydashboard::tabItems(
-        shinydashboard::tabItem(tabName = 'tabFireData',
+        shinydashboard::tabItem(tabName = 'tabData1',
                 htmltools::tagList(
-                  editDataUi('xxx')
+                  editDataUi('data1')
                 )
         ),
-        shinydashboard::tabItem(tabName = 'tabWeatherData',
-                editDataUi('yyy')
+        shinydashboard::tabItem(tabName = 'tabData2',
+                editDataUi('data2')
         ),
-        shinydashboard::tabItem(tabName = 'tabJoinedData',
-                editDataUi('zzz')
+        shinydashboard::tabItem(tabName = 'tabData3',
+                editDataUi('data3')
+        ),
+        shinydashboard::tabItem(tabName = 'tabData4',
+                editDataUi('data4')
         ),
         shinydashboard::tabItem(tabName = 'tabModel', setupModelUi('model')),
         shinydashboard::tabItem(tabName = 'tabMap',

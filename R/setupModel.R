@@ -31,8 +31,12 @@ setupModelServer <- function(id, data) {
                                   "factors",
                                   colnames(data$data()),
                                   inline = TRUE),
-        shiny::actionButton(shiny::NS(id, "button"), label = "Learn")
+        shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Learn")
       )
+    })
+    
+    observeEvent(input$buttonLearn, {
+      
     })
   })
   # https://stackoverflow.com/questions/42454097/dynamic-number-of-x-values-dependent-variables-in-glm-function-in-r-isnt-givi
