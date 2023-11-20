@@ -7,7 +7,8 @@ ui <- function() {
     shinydashboard::dashboardHeader(title = 'Fire Weather'),
     shinydashboard::dashboardSidebar(
       shinydashboard::sidebarMenu(
-        shinydashboard::menuItem("Data", icon = shiny::icon("database"),
+        shinydashboard::menuItem("Data",
+                                 icon = shiny::icon("database"),
                                  startExpanded = TRUE,
            shinydashboard::menuSubItem("Data 1",
                              tabName = "tabData1",
@@ -24,8 +25,10 @@ ui <- function() {
         ),
         shinydashboard::menuItem("Model",
                                  icon = shiny::icon("chart-line"),
-                                 tabName = "tabModel"),
-
+                                 startExpanded = TRUE,
+           shinydashboard::menuSubItem("Gaussian Linear Model",
+                                 tabName = "tabModel")
+        ),
         shinydashboard::menuItem("Map",
                                  icon = shiny::icon("map"), tabName = "tabMap")
       )
