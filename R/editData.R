@@ -99,11 +99,18 @@ editDataServer <- function(id,
 
       if(!is.null(data1) && !is.null(data2)) {
         tabJoin <- shiny::tabPanel("Join data", htmltools::tagList(
-          shiny::checkboxGroupInput(shiny::NS(id,"joinCols"),
-                             "Join on",
-                             intersect(colnames(data1$data()),
-                                       colnames(data2$data()))),
-          shiny::actionButton(NS(id,'buttonJoin'), 'Join')
+          shiny::selectInput(
+            shiny::NS(id, "joinDataChoice1"),
+            "Left Table",
+            choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+          ),
+          shiny::selectInput(
+            shiny::NS(id, "joinDataChoice2"),
+            "Right Table",
+            choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+          ),
+          shiny::actionButton(shiny::NS(id, "selectJoinButton"), "Select"),
+          shiny::uiOutput(NS(id, 'joinColumns'))
         ))
         shinydashboard::tabBox(title = "Import Data", width = 12,
                tabExample,
@@ -140,8 +147,43 @@ editDataServer <- function(id,
     })
 
     shiny::observeEvent(input$buttonJoin, {
-      data(dplyr::left_join(data2$data(), data1$data(), by=input$joinCols))
+      data(dplyr::left_join(
+        switch(input$joinDataChoice1,
+                "Data 1" = data1$data(),
+                "Data 2" = data2$data(),
+                "Data 3" = data3$data(),
+                "Data 4" = data4$data()),
+        switch(input$joinDataChoice2,
+                "Data 1" = data1$data(),
+                "Data 2" = data2$data(),
+                "Data 3" = data3$data(),
+                "Data 4" = data4$data()),
+        by=input$joinCols))
       loadTable()
+    })
+
+    shiny::observeEvent(input$selectJoinButton, {
+      output$joinColumns <- renderUI({
+        htmltools::tagList(
+          shiny::checkboxGroupInput(
+            shiny::NS(id,"joinCols"),
+            "Join on",
+            intersect(
+              colnames(switch(input$joinDataChoice1,
+                              "Data 1" = data1$data(),
+                              "Data 2" = data2$data(),
+                              "Data 3" = data3$data(),
+                              "Data 4" = data4$data())),
+              colnames(switch(input$joinDataChoice2,
+                              "Data 1" = data1$data(),
+                              "Data 2" = data2$data(),
+                              "Data 3" = data3$data(),
+                              "Data 4" = data4$data()))
+            )
+          ),
+          shiny::actionButton(NS(id,'buttonJoin'), 'Join')
+        )
+      })
     })
 
     shiny::observeEvent(input$loadenv, {
