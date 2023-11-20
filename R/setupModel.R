@@ -46,7 +46,7 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
 
       output$factors <- renderUI({
         htmltools::tagList(
-          shiny::selectInput(shiny::NS(id,"var"), "Dependent variable",
+          shiny::selectInput(shiny::NS(id,"var"), "Dependent Variable",
                              choices = colnames(data)
           ),
           shiny::checkboxGroupInput(shiny::NS(id,"cols"),
@@ -58,7 +58,18 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
     })
 
     observeEvent(input$buttonLearn, {
+      data <- switch(input$dataChoice,
+                     "Data 1" = data1$data(),
+                     "Data 2" = data2$data(),
+                     "Data 3" = data3$data(),
+                     "Data 4" = data4$data())
 
+      print(input$cols)
+      print(paste(input$cols, collapse="+"))
+      formula <- as.formula(
+        sprintf("%s~%s", input$var, paste(input$cols, collapse="+"))
+      )
+      mod.glm <- glm(formula, family=poisson(link = "log"), data=data)
     })
   })
   # https://stackoverflow.com/questions/42454097/dynamic-number-of-x-values-dependent-variables-in-glm-function-in-r-isnt-givi
