@@ -24,8 +24,15 @@ setupModelUi <- function(id) {
                            shiny::tabPanel('Accuracy', htmltools::tagList(
                              shiny::tableOutput(shiny::NS(id, 'tab')),
                              shiny::verbatimTextOutput(shiny::NS(id, 'acc'))
-                           ))
-    )
+                           ))),
+
+    shinydashboard::tabBox(title = "Plots", width = 12,
+                           shiny::tabPanel('Fit', htmltools::tagList(
+                             shiny::uiOutput(shiny::NS(id, 'fit')),
+                             shiny::plotOutput(shiny::NS(id, 'plot'))
+                           )))
+
+
   )
 }
 
@@ -100,6 +107,15 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
 
       output$tab <- renderTable(dt)
       output$acc <- renderPrint(rcompanion::accuracy(mod1.glm))
+
+      output$fit <- renderUI({
+        htmltools::tagList(
+          shiny::selectInput(shiny::NS(id, "date"), 'Date', colnames(data)),
+          shiny::dateRangeInput(shiny::NS(id, "dateRange"), 'Period'),
+          shiny::selectInput(shiny::NS(id, "area"), 'Area', colnames(data)),
+          shiny::actionButton(shiny::NS(id, "plotButton"), "Plot")
+        )
+      })
     })
   })
   # https://stackoverflow.com/questions/42454097/dynamic-number-of-x-values-dependent-variables-in-glm-function-in-r-isnt-givi
