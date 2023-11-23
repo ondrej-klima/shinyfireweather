@@ -27,9 +27,22 @@ setupModelUi <- function(id) {
                            ))),
 
     shinydashboard::tabBox(title = "Plots", width = 12,
-                           shiny::tabPanel('Fit', htmltools::tagList(
+                           shiny::tabPanel('Fit Params', htmltools::tagList(
                              shiny::uiOutput(shiny::NS(id, 'fit'))
-                           )))
+                           )),
+                           shiny::tabPanel('Fit Plot', htmltools::tagList(
+                             shiny::uiOutput(shiny::NS(id, "plotUi"))
+                           )),
+                           shiny::tabPanel('Predict', htmltools::tagList(
+                             shiny::uiOutput(shiny::NS(id, 'predictUi'))
+                           )),
+                           shiny::tabPanel('Predict Params', htmltools::tagList(
+                             shiny::uiOutput(shiny::NS(id, 'predictParamsUi'))
+                           )),
+                           shiny::tabPanel('Predict Plot', htmltools::tagList(
+                             shiny::uiOutput(shiny::NS(id, 'predictPlotUi'))
+                           ))
+    )
 
 
   )
@@ -111,8 +124,7 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
           shiny::dateRangeInput(shiny::NS(id, "dateRange"), 'Period'),
           shiny::selectInput(shiny::NS(id, "area"), 'Area Colname', colnames(data())),
           shiny::uiOutput(shiny::NS(id, "areaValUi")),
-          shiny::actionButton(shiny::NS(id, "plotButton"), "Plot"),
-          shiny::uiOutput(shiny::NS(id, "plotUi"))
+          shiny::actionButton(shiny::NS(id, "plotButton"), "Plot")
         )
       })
 
@@ -148,7 +160,7 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
       #                   nsims = 2000))
 
       output$plotUi <- renderUI({
-        shiny::plotOutput(shiny::NS(id, "plot"))
+        shiny::plotOutput(shiny::NS(id, "plot"), width = "100%")
       })
       output$plot <- renderPlot({
         ggplot2::ggplot(d, ggplot2::aes(x = .data[[input$date]], y = pred)) +
@@ -157,7 +169,7 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
           ggplot2::geom_ribbon(ggplot2::aes(x = .data[[input$date]], ymin = lpb, ymax = upb), alpha = 0.2) +
           ggplot2::labs(x = "", y = input$var)+
           ggplot2::ggtitle(paste("Area", input$areaVal))
-      }, width = 480, height = 480)
+      })
     })
   })
   # https://stackoverflow.com/questions/42454097/dynamic-number-of-x-values-dependent-variables-in-glm-function-in-r-isnt-givi
