@@ -151,12 +151,12 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
         shiny::plotOutput(shiny::NS(id, "plot"))
       })
       output$plot <- renderPlot({
-        ggplot2::ggplot(d, aes(x = .data[[input$date]], y = pred)) +
-          geom_point(aes(x = .data[[input$date]], y = .data[[input$var]]), alpha=.5, position=position_jitter(h=.1)) +
-          geom_line(linewidth = 0.6,color="red") +
-          geom_ribbon(aes(x = .data[[input$date]], ymin = lpb, ymax = upb), alpha = 0.2) +
-          labs(x = "", y = input$var)+
-          ggtitle(paste("Area", input$areaVal))
+        ggplot2::ggplot(d, ggplot2::aes(x = .data[[input$date]], y = pred)) +
+          ggplot2::geom_point(ggplot2::aes(x = .data[[input$date]], y = .data[[input$var]]), alpha=.5, position=ggplot2::position_jitter(h=.1)) +
+          ggplot2::geom_line(linewidth = 0.6,color="red") +
+          ggplot2::geom_ribbon(ggplot2::aes(x = .data[[input$date]], ymin = lpb, ymax = upb), alpha = 0.2) +
+          ggplot2::labs(x = "", y = input$var)+
+          ggplot2::ggtitle(paste("Area", input$areaVal))
       }, width = 480, height = 480)
     })
   })
