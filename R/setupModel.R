@@ -28,8 +28,7 @@ setupModelUi <- function(id) {
 
     shinydashboard::tabBox(title = "Plots", width = 12,
                            shiny::tabPanel('Fit', htmltools::tagList(
-                             shiny::uiOutput(shiny::NS(id, 'fit')),
-                             shiny::plotOutput(shiny::NS(id, 'plot'))
+                             shiny::uiOutput(shiny::NS(id, 'fit'))
                            )))
 
 
@@ -44,6 +43,10 @@ setupModelUi <- function(id) {
 #'
 setupModelServer <- function(id, data1, data2, data3, data4) {
   shiny::moduleServer(id, function (input, output, session) {
+    data <- reactiveVal()
+    mod1.glm <- reactiveVal()
+    ci <- reactiveVal()
+
     output$checkboxUi <- renderUI({
       htmltools::tagList(
         shiny::selectInput(
@@ -57,48 +60,42 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
     })
 
     observeEvent(input$dataChoice, {
-      data <- switch(input$dataChoice,
-                     "Data 1" = data1$data(),
-                     "Data 2" = data2$data(),
-                     "Data 3" = data3$data(),
-                     "Data 4" = data4$data())
+      data(switch(input$dataChoice,
+                 "Data 1" = data1$data(),
+                 "Data 2" = data2$data(),
+                 "Data 3" = data3$data(),
+                 "Data 4" = data4$data()))
 
       output$factors <- renderUI({
         htmltools::tagList(
           shiny::selectInput(shiny::NS(id,"var"), "Dependent Variable",
-                             choices = colnames(data)
+                             choices = colnames(data())
           ),
           shiny::checkboxGroupInput(shiny::NS(id,"cols"),
                                     "factors",
-                                    colnames(data),
+                                    colnames(data()),
                                     inline = TRUE)
         )
       })
     })
 
     observeEvent(input$buttonLearn, {
-      data <- switch(input$dataChoice,
-                     "Data 1" = data1$data(),
-                     "Data 2" = data2$data(),
-                     "Data 3" = data3$data(),
-                     "Data 4" = data4$data())
-
       formula <- as.formula(
         sprintf("%s~%s", input$var, paste(input$cols, collapse="+"))
       )
-      mod1.glm <- glm(formula, family=poisson(link = "log"), data=as.data.frame(data))
+      mod1.glm(glm(formula, family=poisson(link = "log"), data=as.data.frame(data())))
 
       output$summary <- renderPrint({
-        summary(mod1.glm)
+        summary(mod1.glm())
       })
 
       output$anova <- renderPrint({
-        anova(mod1.glm, test="Chisq")
+        anova(mod1.glm(), test="Chisq")
       })
 
       dt <- matrix(data = c(
-        as.character(1 - mod1.glm$deviance / mod1.glm$null.deviance),
-        as.character(rcompanion::efronRSquared(mod1.glm))
+        as.character(1 - mod1.glm()$deviance / mod1.glm()$null.deviance),
+        as.character(rcompanion::efronRSquared(mod1.glm()))
       ), ncol = 2)
 
 
@@ -106,16 +103,61 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
                         'Efron R Square')
 
       output$tab <- renderTable(dt)
-      output$acc <- renderPrint(rcompanion::accuracy(mod1.glm))
+      output$acc <- renderPrint(rcompanion::accuracy(mod1.glm()))
 
       output$fit <- renderUI({
         htmltools::tagList(
-          shiny::selectInput(shiny::NS(id, "date"), 'Date', colnames(data)),
+          shiny::selectInput(shiny::NS(id, "date"), 'Date', colnames(data())),
           shiny::dateRangeInput(shiny::NS(id, "dateRange"), 'Period'),
-          shiny::selectInput(shiny::NS(id, "area"), 'Area', colnames(data)),
-          shiny::actionButton(shiny::NS(id, "plotButton"), "Plot")
+          shiny::selectInput(shiny::NS(id, "area"), 'Area Colname', colnames(data())),
+          shiny::uiOutput(shiny::NS(id, "areaValUi")),
+          shiny::actionButton(shiny::NS(id, "plotButton"), "Plot"),
+          shiny::uiOutput(shiny::NS(id, "plotUi"))
         )
       })
+
+      ci(ciTools::add_pi(data(),
+                         mod1.glm(),
+                         names = c("lpb", "upb"),
+                         alpha = 0.05,
+                         nsims = 2000))
+
+    })
+
+    observeEvent(input$area, {
+      output$areaValUi <- renderUI({
+        shiny::selectInput(shiny::NS(id, "areaVal"),
+                           'Area Value',
+                           unique(data()[[input$area]]))
+      })
+    })
+
+    observeEvent(input$plotButton, {
+      d <- ci() %>%
+        dplyr::mutate("{input$date}" := as.Date(.data[[input$date]], "%Y-%m-%d")) %>%
+        dplyr::filter(.data[[input$date]] >= input$dateRange[1]) %>%
+        dplyr::filter(.data[[input$date]] <= input$dateRange[2]) %>%
+        dplyr::filter(.data[[input$area]] == input$areaVal)
+
+      #print(d)
+
+      #ci(ciTools::add_pi(ci(),
+      #                   mod1.glm(),
+      #                   names = c("lpb", "upb"),
+      #                   alpha = 0.05,
+      #                   nsims = 2000))
+
+      output$plotUi <- renderUI({
+        shiny::plotOutput(shiny::NS(id, "plot"))
+      })
+      output$plot <- renderPlot({
+        ggplot2::ggplot(d, aes(x = .data[[input$date]], y = pred)) +
+          geom_point(aes(x = .data[[input$date]], y = .data[[input$var]]), alpha=.5, position=position_jitter(h=.1)) +
+          geom_line(linewidth = 0.6,color="red") +
+          geom_ribbon(aes(x = .data[[input$date]], ymin = lpb, ymax = upb), alpha = 0.2) +
+          labs(x = "", y = input$var)+
+          ggtitle(paste("Area", input$areaVal))
+      }, width = 480, height = 480)
     })
   })
   # https://stackoverflow.com/questions/42454097/dynamic-number-of-x-values-dependent-variables-in-glm-function-in-r-isnt-givi
