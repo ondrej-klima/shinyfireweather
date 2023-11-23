@@ -57,8 +57,10 @@ setupModelUi <- function(id) {
 setupModelServer <- function(id, data1, data2, data3, data4) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- reactiveVal()
+    predictData <- reactiveVal()
     mod1.glm <- reactiveVal()
     ci <- reactiveVal()
+    predCi <- reactiveVal()
 
     output$checkboxUi <- renderUI({
       htmltools::tagList(
@@ -70,6 +72,34 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
         shiny::uiOutput(NS(id, "factors")),
         shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create")
       )
+    })
+
+    output$predictUi <- renderUI({
+      htmltools::tagList(
+        shiny::selectInput(
+          shiny::NS(id, "dataChoicePredict"),
+          "Use Data From",
+          choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+        ),
+        shiny::actionButton(shiny::NS(id, "buttonPredict"), label = "Predict"),
+        DT::DTOutput(shiny::NS(id, "dtable"))
+      )
+    })
+
+    observeEvent(input$buttonPredict, {
+      predictData(switch(input$dataChoicePredict,
+                  "Data 1" = data1$data(),
+                  "Data 2" = data2$data(),
+                  "Data 3" = data3$data(),
+                  "Data 4" = data4$data()))
+      predCi(cbind(predictData(),
+                   'pred' = predict(mod1.glm(),
+                                    newdata=as.data.frame(predictData()),
+                                    type="response",
+                                    se.fit = TRUE)$fit))
+      output$dtable <- DT::renderDT({
+        DT::datatable(predCi(), options = list(scrollX = TRUE))
+      })
     })
 
     observeEvent(input$dataChoice, {
