@@ -92,11 +92,17 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
                   "Data 2" = data2$data(),
                   "Data 3" = data3$data(),
                   "Data 4" = data4$data()))
+      pred <- predict(mod1.glm(),
+                      newdata=as.data.frame(predictData()),
+      #                type="response",
+                      se.fit = TRUE)
+
+      ALPHA = 0.05
       predCi(cbind(predictData(),
-                   'pred' = predict(mod1.glm(),
-                                    newdata=as.data.frame(predictData()),
-                                    type="response",
-                                    se.fit = TRUE)$fit))
+                   exp(cbind(pred=pred$fit,
+                       lower=pred$fit-qnorm(1-ALPHA/2)*pred$se.fit,
+                       upper=pred$fit+qnorm(1-ALPHA/2)*pred$se.fit))
+      ))
       output$dtable <- DT::renderDT({
         DT::datatable(predCi(), options = list(scrollX = TRUE))
       })
