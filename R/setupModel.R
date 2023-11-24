@@ -40,7 +40,7 @@ setupModelUi <- function(id) {
                              shiny::uiOutput(shiny::NS(id, 'predictParamsUi'))
                            )),
                            shiny::tabPanel('Predict Plot', htmltools::tagList(
-                             shiny::uiOutput(shiny::NS(id, 'predictPlotUi'))
+                             shiny::uiOutput(shiny::NS(id, 'pPlotUi'))
                            ))
     )
 
@@ -105,6 +105,16 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
       ))
       output$dtable <- DT::renderDT({
         DT::datatable(predCi(), options = list(scrollX = TRUE))
+      })
+
+      output$predictParamsUi <- renderUI({
+        htmltools::tagList(
+          shiny::selectInput(shiny::NS(id, "pDate"), 'Date', colnames(data())),
+          shiny::dateRangeInput(shiny::NS(id, "pDateRange"), 'Period'),
+          shiny::selectInput(shiny::NS(id, "pArea"), 'Area Colname', colnames(data())),
+          shiny::uiOutput(shiny::NS(id, "pAreaValUi")),
+          shiny::actionButton(shiny::NS(id, "pPlotButton"), "Plot")
+        )
       })
     })
 
@@ -180,6 +190,14 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
       })
     })
 
+    observeEvent(input$pArea, {
+      output$pAreaValUi <- renderUI({
+        shiny::selectInput(shiny::NS(id, "pAreaVal"),
+                           'Area Value',
+                           unique(data()[[input$pArea]]))
+      })
+    })
+
     observeEvent(input$plotButton, {
       d <- ci() %>%
         dplyr::mutate("{input$date}" := as.Date(.data[[input$date]], "%Y-%m-%d")) %>%
@@ -205,6 +223,26 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
           ggplot2::geom_ribbon(ggplot2::aes(x = .data[[input$date]], ymin = lpb, ymax = upb), alpha = 0.2) +
           ggplot2::labs(x = "", y = input$var)+
           ggplot2::ggtitle(paste("Area", input$areaVal))
+      })
+    })
+
+    observeEvent(input$pPlotButton, {
+      d <- predCi() %>%
+        dplyr::mutate("{input$pDate}" := as.Date(.data[[input$pDate]], "%Y-%m-%d")) %>%
+        dplyr::filter(.data[[input$pDate]] >= input$pDateRange[1]) %>%
+        dplyr::filter(.data[[input$pDate]] <= input$pDateRange[2]) %>%
+        dplyr::filter(.data[[input$pArea]] == input$pAreaVal)
+
+      output$pPlotUi <- renderUI({
+        shiny::plotOutput(shiny::NS(id, "pPlot"), width = "100%")
+      })
+      output$pPlot <- renderPlot({
+        ggplot2::ggplot(d, ggplot2::aes(x = .data[[input$pDate]], y = pred)) +
+          ggplot2::geom_point(ggplot2::aes(x = .data[[input$pDate]], y = .data[[input$var]]), alpha=.5, position=ggplot2::position_jitter(h=.1)) +
+          ggplot2::geom_line(linewidth = 0.6,color="red") +
+          ggplot2::geom_ribbon(ggplot2::aes(x = .data[[input$pDate]], ymin = lower, ymax = upper), alpha = 0.2) +
+          ggplot2::labs(x = "", y = input$var)+
+          ggplot2::ggtitle(paste("Area", input$pAreaVal))
       })
     })
   })
