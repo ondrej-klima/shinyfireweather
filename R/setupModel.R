@@ -27,6 +27,9 @@ setupModelUi <- function(id) {
                            ))),
 
     shinydashboard::tabBox(title = "Plots", width = 12,
+                           shiny::tabPanel('Fit', htmltools::tagList(
+                             shiny::uiOutput(shiny::NS(id, 'fitUi'))
+                           )),
                            shiny::tabPanel('Fit Params', htmltools::tagList(
                              shiny::uiOutput(shiny::NS(id, 'fit'))
                            )),
@@ -83,6 +86,12 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
         ),
         shiny::actionButton(shiny::NS(id, "buttonPredict"), label = "Predict"),
         DT::DTOutput(shiny::NS(id, "dtable"))
+      )
+    })
+
+    output$fitUi <- renderUI({
+      htmltools::tagList(
+        DT::DTOutput(shiny::NS(id, "fittable"))
       )
     })
 
@@ -179,6 +188,10 @@ setupModelServer <- function(id, data1, data2, data3, data4) {
                          names = c("lpb", "upb"),
                          alpha = 0.05,
                          nsims = 2000))
+
+      output$fittable <- DT::renderDT({
+        DT::datatable(ci(), options = list(scrollX = TRUE))
+      })
 
     })
 
