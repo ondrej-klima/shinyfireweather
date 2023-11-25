@@ -3,7 +3,7 @@
 #' This function provides UI for the model setup.
 #'
 
-setupModelUi <- function(id) {
+PAModelUi <- function(id) {
   shiny::fluidRow(
     shinybusy::add_busy_spinner(spin = "fading-circle"),
 
@@ -57,7 +57,7 @@ setupModelUi <- function(id) {
 #' This function provides server for the data edit table.
 #' @importFrom magrittr "%>%"
 #'
-setupModelServer <- function(id, data1, data2, data3, data4) {
+PAModelServer <- function(id, data1, data2, data3, data4) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- reactiveVal()
     predictData <- reactiveVal()

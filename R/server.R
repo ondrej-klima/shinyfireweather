@@ -28,7 +28,8 @@ server <- function(input, output, session) {
                             data3 = data3,
                             data4 = data4)
 
-  setupModel <- setupModelServer('model', data1, data2, data3, data4)
+  GLModelServer('GLModel', data1, data2, data3, data4)
+  PAModelServer('PAModel', data1, data2, data3, data4)
 
   # https://www.jla-data.net/cze/package-rczechia/
   output$map <- leaflet::renderLeaflet({

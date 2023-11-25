@@ -27,7 +27,9 @@ ui <- function() {
                                  icon = shiny::icon("chart-line"),
                                  startExpanded = TRUE,
            shinydashboard::menuSubItem("Gaussian Linear Model",
-                                 tabName = "tabModel")
+                                 tabName = "tabGLModel"),
+           shinydashboard::menuSubItem("Poisson Autoregression Model",
+                                       tabName = "tabPAModel")
         ),
         shinydashboard::menuItem("Map",
                                  icon = shiny::icon("map"), tabName = "tabMap")
@@ -49,7 +51,8 @@ ui <- function() {
         shinydashboard::tabItem(tabName = 'tabData4',
                 editDataUi('data4')
         ),
-        shinydashboard::tabItem(tabName = 'tabModel', setupModelUi('model')),
+        shinydashboard::tabItem(tabName = 'tabGLModel', GLModelUi('GLModel')),
+        shinydashboard::tabItem(tabName = 'tabPAModel', PAModelUi('PAModel')),
         shinydashboard::tabItem(tabName = 'tabMap',
                 leaflet::leafletOutput('map')
         )
