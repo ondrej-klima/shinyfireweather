@@ -22,7 +22,9 @@ Imports:
     stringr,
     tidyr,
     tools,
-    rcompanion
+    rcompanion,
+    tscount, 
+    ggplot2
 Depends: 
     R (>= 2.10)
 LazyData: true

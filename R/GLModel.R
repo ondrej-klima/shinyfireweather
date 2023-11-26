@@ -141,7 +141,7 @@ GLModelServer <- function(id, data1, data2, data3, data4) {
           shiny::checkboxGroupInput(shiny::NS(id,"cols"),
                                     "factors",
                                     colnames(data()),
-                                    inline = TRUE)
+                                    inline = TRUE),
           shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create")
         )
       })

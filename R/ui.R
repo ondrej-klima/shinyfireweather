@@ -4,7 +4,7 @@
 
 ui <- function() {
   shinydashboard::dashboardPage(
-    shinydashboard::dashboardHeader(title = 'Fire Weather'),
+    shinydashboard::dashboardHeader(title = 'FLKR predict'),
     shinydashboard::dashboardSidebar(
       shinydashboard::sidebarMenu(
         shinydashboard::menuItem("Data",
@@ -28,7 +28,7 @@ ui <- function() {
                                  startExpanded = TRUE,
            shinydashboard::menuSubItem("Gaussian Linear Model",
                                  tabName = "tabGLModel"),
-           shinydashboard::menuSubItem("Poisson Autoregression Model",
+           shinydashboard::menuSubItem("Poisson Autoregressive Model",
                                        tabName = "tabPAModel")
         ),
         shinydashboard::menuItem("Map",
