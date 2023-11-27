@@ -274,6 +274,7 @@ editDataServer <- function(id,
           shiny::actionButton(shiny::NS(id, 'buttonDrop'), 'Drop'),
           shiny::actionButton(shiny::NS(id, 'buttonRename'), 'Rename'),
           shiny::actionButton(shiny::NS(id, 'buttonRLE'), 'RLE'),
+          shiny::actionButton(shiny::NS(id, 'buttonCumsum'), 'Cumsum'),
           shiny::textInput(shiny::NS(id, 'name'), NULL, 'new_col_name'),
           shiny::selectInput(shiny::NS(id, 'selectCol2'),
                              'Source Column',
@@ -360,6 +361,19 @@ editDataServer <- function(id,
       data(data() %>%
              dplyr::mutate(weekend=as.factor((
                lubridate::wday(.data[[var]], week_start = 1) > 5)*1))
+      )
+      selcol(input$name)
+      output$dtable <- DT::renderDT({
+        shiny::isolate({
+          DT::datatable(data(), options = list(scrollX = TRUE))
+        })
+      })
+    })
+
+    shiny::observeEvent(input$buttonCumsum, {
+      var <- colnames(db())[1]
+      data(data() %>%
+             dplyr::mutate(cumsum=cumsum(.data[[var]]))
       )
       selcol(input$name)
       output$dtable <- DT::renderDT({
