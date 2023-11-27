@@ -30,6 +30,7 @@ server <- function(input, output, session) {
 
   GLModelServer('GLModel', data1, data2, data3, data4)
   PAModelServer('PAModel', data1, data2, data3, data4)
+  ARIMAModelServer('ARIMA', data1, data2, data3, data4)
   ARIMAextModelServer('ARIMAext', data1, data2, data3, data4)
 
   # https://www.jla-data.net/cze/package-rczechia/
