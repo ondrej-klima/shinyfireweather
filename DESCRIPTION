@@ -25,7 +25,9 @@ Imports:
     rcompanion,
     tscount, 
     ggplot2,
-    lubridate
+    lubridate,
+    forecast,
+    stats
 Depends: 
     R (>= 2.10)
 LazyData: true

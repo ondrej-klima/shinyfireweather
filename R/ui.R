@@ -31,7 +31,7 @@ ui <- function() {
            shinydashboard::menuSubItem("Poisson Autoregressive Model",
                                        tabName = "tabPAModel"),
            shinydashboard::menuItem(HTML("AutoRegressive Integrated<br />Moving Average"), startExpanded = TRUE,
-                                    shinydashboard::menuSubItem("External regressor", tabName="tabName"))
+                                    shinydashboard::menuSubItem("External regressor", tabName="tabARIMAext"))
         ),
         shinydashboard::menuItem("Map",
                                  icon = shiny::icon("map"), tabName = "tabMap")
@@ -55,6 +55,7 @@ ui <- function() {
         ),
         shinydashboard::tabItem(tabName = 'tabGLModel', GLModelUi('GLModel')),
         shinydashboard::tabItem(tabName = 'tabPAModel', PAModelUi('PAModel')),
+        shinydashboard::tabItem(tabName = 'tabARIMAext', ARIMAextModelUi('ARIMAext')),
         shinydashboard::tabItem(tabName = 'tabMap',
                 leaflet::leafletOutput('map')
         )
