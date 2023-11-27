@@ -29,7 +29,9 @@ ui <- function() {
            shinydashboard::menuSubItem("Gaussian Linear Model",
                                  tabName = "tabGLModel"),
            shinydashboard::menuSubItem("Poisson Autoregressive Model",
-                                       tabName = "tabPAModel")
+                                       tabName = "tabPAModel"),
+           shinydashboard::menuItem(HTML("AutoRegressive Integrated<br />Moving Average"), startExpanded = TRUE,
+                                    shinydashboard::menuSubItem("External regressor", tabName="tabName"))
         ),
         shinydashboard::menuItem("Map",
                                  icon = shiny::icon("map"), tabName = "tabMap")

@@ -268,6 +268,7 @@ editDataServer <- function(id,
                              selected = selcol()),
           shiny::actionButton(shiny::NS(id, 'buttonDate'), 'Fix Date'),
           shiny::actionButton(shiny::NS(id, 'buttonDateSplit'), 'Split date'),
+          shiny::actionButton(shiny::NS(id, 'buttonWeekend'), 'Add Weekend'),
           shiny::actionButton(shiny::NS(id, 'buttonArea'), 'Fix Area'),
           shiny::actionButton(shiny::NS(id, 'buttonDuplicate'), 'Duplicate'),
           shiny::actionButton(shiny::NS(id, 'buttonDrop'), 'Drop'),
@@ -346,6 +347,20 @@ editDataServer <- function(id,
             dplyr::mutate(month=as.factor(stringr::str_sub(as.character(date), 6, 7))) %>%
             dplyr::mutate(year=as.factor(stringr::str_sub(as.character(date), 1, 4)))
           )
+      selcol(input$name)
+      output$dtable <- DT::renderDT({
+        shiny::isolate({
+          DT::datatable(data(), options = list(scrollX = TRUE))
+        })
+      })
+    })
+
+    shiny::observeEvent(input$buttonWeekend, {
+      var <- colnames(db())[1]
+      data(data() %>%
+             dplyr::mutate(weekend=as.factor((
+               lubridate::wday(.data[[var]], week_start = 1) > 5)*1))
+      )
       selcol(input$name)
       output$dtable <- DT::renderDT({
         shiny::isolate({
