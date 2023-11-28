@@ -7,6 +7,9 @@ ui <- function() {
     shinydashboard::dashboardHeader(title = 'FLKR predict'),
     shinydashboard::dashboardSidebar(
       shinydashboard::sidebarMenu(
+        shinydashboard::menuSubItem("Info", 
+                                    tabName = "tabInfo", 
+                                    icon = shiny::icon("circle-info")),
         shinydashboard::menuItem("Data",
                                  icon = shiny::icon("database"),
                                  startExpanded = TRUE,
@@ -40,20 +43,11 @@ ui <- function() {
     ),
     shinydashboard::dashboardBody(
       shinydashboard::tabItems(
-        shinydashboard::tabItem(tabName = 'tabData1',
-                htmltools::tagList(
-                  editDataUi('data1')
-                )
-        ),
-        shinydashboard::tabItem(tabName = 'tabData2',
-                editDataUi('data2')
-        ),
-        shinydashboard::tabItem(tabName = 'tabData3',
-                editDataUi('data3')
-        ),
-        shinydashboard::tabItem(tabName = 'tabData4',
-                editDataUi('data4')
-        ),
+        shinydashboard::tabItem(tabName = 'tabInfo', infoUi('info')),
+        shinydashboard::tabItem(tabName = 'tabData1', editDataUi('data1')),
+        shinydashboard::tabItem(tabName = 'tabData2', editDataUi('data2')),
+        shinydashboard::tabItem(tabName = 'tabData3', editDataUi('data3')),
+        shinydashboard::tabItem(tabName = 'tabData4', editDataUi('data4')),
         shinydashboard::tabItem(tabName = 'tabGLModel', GLModelUi('GLModel')),
         shinydashboard::tabItem(tabName = 'tabPAModel', PAModelUi('PAModel')),
         shinydashboard::tabItem(tabName = 'tabARIMA', ARIMAextModelUi('ARIMA')),
