@@ -22,7 +22,7 @@ server <- function(input, output, session) {
                             data2 = data2,
                             data3 = data3,
                             data4 = data4)
-  data4 <- editDataServer('data4', exampleData = NULL,
+  data4 <- editDataServer('data4', exampleData = shinyfireweather::migrants,
                             data1 = data1,
                             data2 = data2,
                             data3 = data3,
