@@ -27,7 +27,8 @@ Imports:
     ggplot2,
     lubridate,
     forecast,
-    stats
+    stats,
+    rhandsontable
 Depends: 
     R (>= 2.10)
 LazyData: true
