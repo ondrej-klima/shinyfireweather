@@ -17,6 +17,18 @@ infoUi <- function(id) {
                              htmltools::div(id='myid', rhandsontable::rHandsontableOutput(
                                shiny::NS(id, "table"))
                                )
+                           ),
+                           shiny::tabPanel('Registr prediktorů',
+                             htmltools::tags$style('#myid2 * { word-wrap: break-word; }'),
+                             htmltools::div(id='myid2', rhandsontable::rHandsontableOutput(
+                               shiny::NS(id, "table2"))
+                             )
+                           ),
+                           shiny::tabPanel('Registr významných událostí',
+                             htmltools::tags$style('#myid3 * { word-wrap: break-word; }'),
+                             htmltools::div(id='myid3', rhandsontable::rHandsontableOutput(
+                               shiny::NS(id, "table3"))
+                             )
                            )
     )
 
@@ -119,7 +131,7 @@ infoServer <- function(id) {
       evaluation = as.numeric(rep(NA,5)),
       selected = as.logical(rep(NA,5))
     ))
-
+    
     output$table <- rhandsontable::renderRHandsontable({
       rhandsontable::rhandsontable(
         data = data(),
@@ -136,6 +148,51 @@ infoServer <- function(id) {
         rhandsontable::hot_rows(rowHeights = 50) %>%
         rhandsontable::hot_col(c(6, 7), halign='htCenter', valign='htMiddle')
     })
+    
+    data2 <- reactive({
+      data() %>% 
+        dplyr::select(-selected) %>%
+        dplyr::arrange(evaluation) %>%
+        na.omit()
+    })
+    
+    output$table2 <- rhandsontable::renderRHandsontable({
+      rhandsontable::rhandsontable(
+        data = data2(),
+        colHeaders = cnames,
+        rowHeaders = TRUE,
+        contextMenu = FALSE,
+        stretchH = "all",
+        width = '100%',
+        height = 800,
+        colWidths = c(150, 150, 150, 150, 150, 60),
+        manualColumnResize = TRUE,
+        manualRowResize = TRUE,
+      ) %>%
+        rhandsontable::hot_rows(rowHeights = 50) %>%
+        rhandsontable::hot_col(6, halign='htCenter', valign='htMiddle')
+    })    
+    
+    data3 <- reactiveVal(data.frame(
+      title=as.character(rep(NA, 5)),
+      caption=as.character(rep(NA, 5))
+    ))
+    output$table3 <- rhandsontable::renderRHandsontable({
+      rhandsontable::rhandsontable(
+        data = data3(),
+        colHeaders = c('Název události', 'Popis události'),
+        rowHeaders = TRUE,
+        contextMenu = TRUE,
+        stretchH = "all",
+        width = '100%',
+        height = 800,
+        colWidths = c(200, 500),
+        manualColumnResize = TRUE,
+        manualRowResize = TRUE,
+      ) %>%
+        rhandsontable::hot_rows(rowHeights = 50)
+    })
+    
 
     observeEvent(input$table, {
       df = rhandsontable::hot_to_r(input$table)
