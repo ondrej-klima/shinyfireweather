@@ -28,7 +28,8 @@ Imports:
     lubridate,
     forecast,
     stats,
-    rhandsontable
+    rhandsontable,
+    plotly
 Depends: 
     R (>= 2.10)
 LazyData: true

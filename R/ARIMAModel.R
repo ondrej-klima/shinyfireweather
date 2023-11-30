@@ -153,14 +153,14 @@ ARIMAModelServer <- function(id, data1, data2, data3, data4) {
       pred.fit.var<-rbind(pred.fit.var1,pred.fit.var2)
 
       output$pPlotUi <- renderUI({
-        shiny::plotOutput(shiny::NS(id, "pPlot"), width = "100%")
+        plotly::plotlyOutput(shiny::NS(id, "pPlot"), width = "100%")
       })
-      output$pPlot <- renderPlot({
-        ggplot2::ggplot(pred.fit.var, ggplot2::aes(x=date,y=fit) )+
+      output$pPlot <- plotly::renderPlotly({
+        plotly::ggplotly(ggplot2::ggplot(pred.fit.var, ggplot2::aes(x=date,y=fit) )+
           ggplot2::geom_point(ggplot2::aes(x=date, y=.data[[input$var]]))+
           ggplot2::geom_line(linewidth = 0.6, color="red")+
           ggplot2::geom_ribbon(ggplot2::aes(ymin = CIlow, ymax = CIup), alpha=0.2)+
-          ggplot2::labs(x = "", y = input$var)
+          ggplot2::labs(x = "", y = input$var))
       })
 
       output$dtable <- DT::renderDT({
