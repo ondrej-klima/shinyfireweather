@@ -4,11 +4,11 @@
 
 ui <- function() {
   shinydashboard::dashboardPage(
-    shinydashboard::dashboardHeader(title = 'FLKR predict'),
+    shinydashboard::dashboardHeader(title = 'KSpredict'),
     shinydashboard::dashboardSidebar(
       shinydashboard::sidebarMenu(
-        shinydashboard::menuSubItem("Info", 
-                                    tabName = "tabInfo", 
+        shinydashboard::menuSubItem("Info",
+                                    tabName = "tabInfo",
                                     icon = shiny::icon("circle-info")),
         shinydashboard::menuItem("Data",
                                  icon = shiny::icon("database"),
@@ -29,8 +29,12 @@ ui <- function() {
         shinydashboard::menuItem("Model",
                                  icon = shiny::icon("chart-line"),
                                  startExpanded = TRUE,
-           shinydashboard::menuSubItem("Gaussian Linear Model",
+           shinydashboard::menuSubItem(htmltools::HTML("Linear Model"),
+                                 tabName = "tabLModel"),
+           shinydashboard::menuSubItem(htmltools::HTML("Poisson Generalized<br />Additive Model"),
                                  tabName = "tabGLModel"),
+           shinydashboard::menuSubItem(htmltools::HTML("Quasi-Poisson Generalized<br/>Additive Model"),
+                                       tabName = "tabGLMQModel"),
            shinydashboard::menuSubItem("Poisson Autoregressive Model",
                                        tabName = "tabPAModel"),
            shinydashboard::menuItem(htmltools::HTML("AutoRegressive Integrated<br />Moving Average"), startExpanded = TRUE,
@@ -48,7 +52,9 @@ ui <- function() {
         shinydashboard::tabItem(tabName = 'tabData2', editDataUi('data2')),
         shinydashboard::tabItem(tabName = 'tabData3', editDataUi('data3')),
         shinydashboard::tabItem(tabName = 'tabData4', editDataUi('data4')),
+        shinydashboard::tabItem(tabName = 'tabLModel', GLModelUi('LModel')),
         shinydashboard::tabItem(tabName = 'tabGLModel', GLModelUi('GLModel')),
+        shinydashboard::tabItem(tabName = 'tabGLMQModel', GLMQuasiModelUi('GLMQModel')),
         shinydashboard::tabItem(tabName = 'tabPAModel', PAModelUi('PAModel')),
         shinydashboard::tabItem(tabName = 'tabARIMA', ARIMAextModelUi('ARIMA')),
         shinydashboard::tabItem(tabName = 'tabARIMAext', ARIMAextModelUi('ARIMAext')),

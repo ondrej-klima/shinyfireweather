@@ -127,9 +127,7 @@ infoServer <- function(id) {
 
     data0 <- reactiveVal(data.frame(
       title=as.character(NA),
-      caption = as.character(NA),
-      window = factor(NA, levels = c('den', 'týden')),
-      prediction = factor(NA, levels = c('týden', 'měsíc'))
+      caption = as.character(NA)
     ))
 
     output$table0 <- rhandsontable::renderRHandsontable({
@@ -137,15 +135,13 @@ infoServer <- function(id) {
         data = data0(),
         colHeaders = c(
           'Účel a způsob využití predikce',
-          'Jasné a konkrétní vymezení proměnné',
-          'časový interval pro průměrování vysvětlované proměnné',
-          'Časový dosah predikce'),
+          'Jasné a konkrétní vymezení proměnné'),
         rowHeaders = TRUE,
         contextMenu = FALSE,
         stretchH = "all",
         width = '100%',
         height = 800,
-        colWidths = c(200, 200, 100, 100),
+        colWidths = c(200, 200),
         manualColumnResize = TRUE,
         manualRowResize = TRUE,
       ) %>%
