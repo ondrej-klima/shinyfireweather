@@ -29,7 +29,8 @@ Imports:
     forecast,
     stats,
     rhandsontable,
-    plotly
+    plotly,
+    mgcv
 Depends: 
     R (>= 2.10)
 LazyData: true

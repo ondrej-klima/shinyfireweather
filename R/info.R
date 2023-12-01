@@ -10,26 +10,26 @@ infoUi <- function(id) {
 
     shinydashboard::tabBox(title = NULL, width = 12,
                            shiny::tabPanel('Vysvětlovaná proměnná',
-                             htmltools::tags$style('#myid * { word-wrap: break-word; }'),
-                             htmltools::div(id='myid', rhandsontable::rHandsontableOutput(
+                             htmltools::tags$style('#myid1 * { word-wrap: break-word; }'),
+                             htmltools::div(id='myid1', rhandsontable::rHandsontableOutput(
                                shiny::NS(id, "table0"))
                              )
                            ),
                            shiny::tabPanel('Registr potenciálních prediktorů',
-                             htmltools::tags$style('#myid * { word-wrap: break-word; }'),
-                             htmltools::div(id='myid', rhandsontable::rHandsontableOutput(
+                             htmltools::tags$style('#myid2 * { word-wrap: break-word; }'),
+                             htmltools::div(id='myid2', rhandsontable::rHandsontableOutput(
                                shiny::NS(id, "table1"))
                                )
                            ),
                            shiny::tabPanel('Registr prediktorů',
-                             htmltools::tags$style('#myid2 * { word-wrap: break-word; }'),
-                             htmltools::div(id='myid2', rhandsontable::rHandsontableOutput(
+                             htmltools::tags$style('#myid3 * { word-wrap: break-word; }'),
+                             htmltools::div(id='myid3', rhandsontable::rHandsontableOutput(
                                shiny::NS(id, "table2"))
                              )
                            ),
                            shiny::tabPanel('Registr významných událostí',
-                             htmltools::tags$style('#myid3 * { word-wrap: break-word; }'),
-                             htmltools::div(id='myid3', rhandsontable::rHandsontableOutput(
+                             htmltools::tags$style('#myid4 * { word-wrap: break-word; }'),
+                             htmltools::div(id='myid4', rhandsontable::rHandsontableOutput(
                                shiny::NS(id, "table3"))
                              )
                            )
@@ -124,19 +124,19 @@ infoServer <- function(id) {
       'Ohodnocení',
       'Vybrat'
       )
-    
+
     data0 <- reactiveVal(data.frame(
       title=as.character(NA),
       caption = as.character(NA),
       window = factor(NA, levels = c('den', 'týden')),
       prediction = factor(NA, levels = c('týden', 'měsíc'))
     ))
-    
+
     output$table0 <- rhandsontable::renderRHandsontable({
       rhandsontable::rhandsontable(
         data = data0(),
         colHeaders = c(
-          'Účel a způsob využití predikce', 
+          'Účel a způsob využití predikce',
           'Jasné a konkrétní vymezení proměnné',
           'časový interval pro průměrování vysvětlované proměnné',
           'Časový dosah predikce'),
@@ -151,7 +151,7 @@ infoServer <- function(id) {
       ) %>%
         rhandsontable::hot_rows(rowHeights = 150)
     })
-    
+
 
     data <- reactiveVal(data.frame(
       label=as.character(rep(NA,5)),
@@ -162,7 +162,7 @@ infoServer <- function(id) {
       evaluation = as.numeric(rep(NA,5)),
       selected = as.logical(rep(NA,5))
     ))
-    
+
     output$table1 <- rhandsontable::renderRHandsontable({
       rhandsontable::rhandsontable(
         data = data(),
@@ -179,15 +179,15 @@ infoServer <- function(id) {
         rhandsontable::hot_rows(rowHeights = 50) %>%
         rhandsontable::hot_col(c(6, 7), halign='htCenter', valign='htMiddle')
     })
-    
+
     data2 <- reactive({
-      data() %>% 
+      data() %>%
         dplyr::filter(selected == TRUE) %>%
         dplyr::select(-selected) %>%
         dplyr::arrange(evaluation) %>%
         na.omit()
     })
-    
+
     output$table2 <- rhandsontable::renderRHandsontable({
       rhandsontable::rhandsontable(
         data = data2(),
@@ -204,8 +204,8 @@ infoServer <- function(id) {
         rhandsontable::hot_rows(rowHeights = 50) %>%
         rhandsontable::hot_col(6, halign='htCenter', valign='htMiddle') %>%
         rhandsontable::hot_col(1:6, readOnly = T)
-    })    
-    
+    })
+
     data3 <- reactiveVal(data.frame(
       title=as.character(rep(NA, 5)),
       caption=as.character(rep(NA, 5))
@@ -225,7 +225,7 @@ infoServer <- function(id) {
       ) %>%
         rhandsontable::hot_rows(rowHeights = 50)
     })
-    
+
 
     observeEvent(input$table1, {
       df = rhandsontable::hot_to_r(input$table1)

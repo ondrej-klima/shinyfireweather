@@ -105,11 +105,17 @@ GLModelServer <- function(id, data1, data2, data3, data4) {
       #                type="response",
                       se.fit = TRUE)
 
-      ALPHA = 0.05
       predCi(cbind(predictData(),
                    exp(cbind(pred=pred$fit,
-                       lower=pred$fit-qnorm(1-ALPHA/2)*pred$se.fit,
-                       upper=pred$fit+qnorm(1-ALPHA/2)*pred$se.fit))
+                       lower99=pred$fit-qnorm(1-0.01/2)*pred$se.fit,
+                       upper99=pred$fit+qnorm(1-0.01/2)*pred$se.fit,
+                       lower95=pred$fit-qnorm(1-0.05/2)*pred$se.fit,
+                       upper95=pred$fit+qnorm(1-0.05/2)*pred$se.fit,
+                       lower90=pred$fit-qnorm(1-0.1/2)*pred$se.fit,
+                       upper90=pred$fit+qnorm(1-0.1/2)*pred$se.fit,
+                       lower80=pred$fit-qnorm(1-0.2/2)*pred$se.fit,
+                       upper80=pred$fit+qnorm(1-0.2/2)*pred$se.fit
+                       ))
       ))
       output$dtable <- DT::renderDT({
         DT::datatable(predCi(), options = list(scrollX = TRUE))
@@ -139,7 +145,7 @@ GLModelServer <- function(id, data1, data2, data3, data4) {
                              choices = colnames(data())
           ),
           shiny::checkboxGroupInput(shiny::NS(id,"cols"),
-                                    "factors",
+                                    "Factors",
                                     colnames(data()),
                                     inline = TRUE),
           shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create")
@@ -151,27 +157,51 @@ GLModelServer <- function(id, data1, data2, data3, data4) {
       formula <- as.formula(
         sprintf("%s~%s", input$var, paste(input$cols, collapse="+"))
       )
-      mod1.glm(glm(formula, family=poisson(link = "log"), data=as.data.frame(data())))
+      mod1.glm(mgcv::gam(formula, family=poisson(link = "log"), data=as.data.frame(data())))
 
       output$summary <- renderPrint({
         summary(mod1.glm())
       })
 
       output$anova <- renderPrint({
-        anova(mod1.glm(), test="Chisq")
+        anova(mod1.glm())
       })
 
+      # pseudo R2
+      pseudo.R2.glm1<-summary(mod1.glm())$r.sq
+
+      # vysvetlena deviance
+      dev.expl.glm1<-summary(mod1.glm())$dev.expl
+
+
+      # MSE modelu
+      n.fit<-length(fitted.values(mod1.glm()))
+      MSE.glm1<-sum((data()[[input$var]]-predict(mod1.glm(),newdata = data(),type = "response"))^2,na.rm = TRUE)/n.fit
+
+      # RMSE
+      RMSE.glm1<-sqrt(MSE.glm1)
+
+      # MAE
+      MAE.glm1<-sum(abs(data()[[input$var]]-predict(mod1.glm(),newdata = data(),type = "response")),na.rm = TRUE)/n.fit
+
+
       dt <- matrix(data = c(
-        as.character(1 - mod1.glm()$deviance / mod1.glm()$null.deviance),
-        as.character(rcompanion::efronRSquared(mod1.glm()))
-      ), ncol = 2)
+        as.character(pseudo.R2.glm1),
+        as.character(dev.expl.glm1),
+        as.character(MSE.glm1),
+        as.character(RMSE.glm1),
+        as.character(MAE.glm1)
+      ), ncol = 5)
 
 
-      colnames(dt) <- c('Explained Deviance (0 - 1)',
-                        'Efron R Square')
+      colnames(dt) <- c('Pseudo R2',
+                        'Deviance explained',
+                        'MSE',
+                        'RMSE',
+                        'MAE')
 
       output$tab <- renderTable(dt)
-      output$acc <- renderPrint(rcompanion::accuracy(mod1.glm()))
+      #output$acc <- renderPrint(rcompanion::accuracy(mod1.glm()))
 
       output$fit <- renderUI({
         htmltools::tagList(
@@ -183,11 +213,7 @@ GLModelServer <- function(id, data1, data2, data3, data4) {
         )
       })
 
-      ci(ciTools::add_pi(data(),
-                         mod1.glm(),
-                         names = c("lpb", "upb"),
-                         alpha = 0.05,
-                         nsims = 2000))
+      ci(cbind(data(), pred=predict(mod1.glm(),newdata = data(),type = "response")))
 
       output$fittable <- DT::renderDT({
         DT::datatable(ci(), options = list(scrollX = TRUE))
@@ -218,24 +244,16 @@ GLModelServer <- function(id, data1, data2, data3, data4) {
         dplyr::filter(.data[[input$date]] <= input$dateRange[2]) %>%
         dplyr::filter(.data[[input$area]] == input$areaVal)
 
-      #print(d)
-
-      #ci(ciTools::add_pi(ci(),
-      #                   mod1.glm(),
-      #                   names = c("lpb", "upb"),
-      #                   alpha = 0.05,
-      #                   nsims = 2000))
-
       output$plotUi <- renderUI({
-        shiny::plotOutput(shiny::NS(id, "plot"), width = "100%")
+        plotly::plotlyOutput(shiny::NS(id, "plot"), width = "100%")
       })
-      output$plot <- renderPlot({
-        ggplot2::ggplot(d, ggplot2::aes(x = .data[[input$date]], y = pred)) +
+      output$plot <- plotly::renderPlotly({
+        plotly::ggplotly(ggplot2::ggplot(d, ggplot2::aes(x = .data[[input$date]], y = pred)) +
           ggplot2::geom_point(ggplot2::aes(x = .data[[input$date]], y = .data[[input$var]]), alpha=.5, position=ggplot2::position_jitter(h=.1)) +
           ggplot2::geom_line(linewidth = 0.6,color="red") +
-          ggplot2::geom_ribbon(ggplot2::aes(x = .data[[input$date]], ymin = lpb, ymax = upb), alpha = 0.2) +
+          #ggplot2::geom_ribbon(ggplot2::aes(x = .data[[input$date]], ymin = lpb, ymax = upb), alpha = 0.2) +
           ggplot2::labs(x = "", y = input$var)+
-          ggplot2::ggtitle(paste("Area", input$areaVal))
+          ggplot2::ggtitle(paste("Area", input$areaVal)))
       })
     })
 
@@ -247,15 +265,77 @@ GLModelServer <- function(id, data1, data2, data3, data4) {
         dplyr::filter(.data[[input$pArea]] == input$pAreaVal)
 
       output$pPlotUi <- renderUI({
-        shiny::plotOutput(shiny::NS(id, "pPlot"), width = "100%")
+        htmltools::tagList(
+          shiny::checkboxGroupInput(
+            shiny::NS(id, "confidenceLevels"),
+            "Confidence Levels",
+            choices = c("99%", "95%", "90%", "80%"),
+            selected = "95%",
+            inline = TRUE
+          ),
+          plotly::plotlyOutput(shiny::NS(id, "pPlot"), width = "100%"),
+        )
       })
-      output$pPlot <- renderPlot({
-        ggplot2::ggplot(d, ggplot2::aes(x = .data[[input$pDate]], y = pred)) +
-          ggplot2::geom_point(ggplot2::aes(x = .data[[input$pDate]], y = .data[[input$var]]), alpha=.5, position=ggplot2::position_jitter(h=.1)) +
+      output$pPlot <- plotly::renderPlotly({
+        plotly::ggplotly(ggplot2::ggplot(d, ggplot2::aes(x = .data[[input$pDate]], y = pred)) +
+          ggplot2::geom_point(
+            ggplot2::aes(
+              x = .data[[input$pDate]],
+              y = .data[[input$var]]),
+              alpha=.5, position=ggplot2::position_jitter(h=.1)
+          ) +
           ggplot2::geom_line(linewidth = 0.6,color="red") +
-          ggplot2::geom_ribbon(ggplot2::aes(x = .data[[input$pDate]], ymin = lower, ymax = upper), alpha = 0.2) +
+          ggplot2::geom_ribbon(ggplot2::aes(x = .data[[input$pDate]], ymin = lower95, ymax = upper95), alpha = 0.2) +
           ggplot2::labs(x = "", y = input$var)+
-          ggplot2::ggtitle(paste("Area", input$pAreaVal))
+          ggplot2::ggtitle(paste("Area", input$pAreaVal)))
+      })
+    })
+
+    observeEvent(input$confidenceLevels, {
+      d <- predCi() %>%
+        dplyr::mutate("{input$pDate}" := as.Date(.data[[input$pDate]], "%Y-%m-%d")) %>%
+        dplyr::filter(.data[[input$pDate]] >= input$pDateRange[1]) %>%
+        dplyr::filter(.data[[input$pDate]] <= input$pDateRange[2]) %>%
+        dplyr::filter(.data[[input$pArea]] == input$pAreaVal)
+
+      p <- ggplot2::ggplot(d, ggplot2::aes(x = .data[[input$pDate]], y = pred)) +
+        ggplot2::geom_point(
+          ggplot2::aes(
+            x = .data[[input$pDate]],
+            y = .data[[input$var]]),
+          alpha=.5, position=ggplot2::position_jitter(h=.1)
+        ) +
+        ggplot2::geom_line(linewidth = 0.6,color="red") +
+        ggplot2::labs(x = "", y = input$var)+
+        ggplot2::ggtitle(paste("Area", input$pAreaVal))
+
+      if("99%" %in% input$confidenceLevels) {
+        p <- p + ggplot2::geom_ribbon(
+          ggplot2::aes(x = .data[[input$pDate]],
+                       ymin = lower99, ymax = upper99),
+          alpha = 0.2)
+      }
+      if("95%" %in% input$confidenceLevels) {
+        p <- p + ggplot2::geom_ribbon(
+          ggplot2::aes(x = .data[[input$pDate]],
+                       ymin = lower95, ymax = upper95),
+          alpha = 0.2)
+      }
+      if("90%" %in% input$confidenceLevels) {
+        p <- p + ggplot2::geom_ribbon(
+          ggplot2::aes(x = .data[[input$pDate]],
+                       ymin = lower90, ymax = upper90),
+          alpha = 0.2)
+      }
+      if("80%" %in% input$confidenceLevels) {
+        p <- p + ggplot2::geom_ribbon(
+          ggplot2::aes(x = .data[[input$pDate]],
+                       ymin = lower80, ymax = upper80),
+          alpha = 0.2)
+      }
+
+      output$pPlot <- plotly::renderPlotly({
+        plotly::ggplotly(p)
       })
     })
   })
