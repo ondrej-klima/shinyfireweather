@@ -37,12 +37,16 @@ ui <- function() {
                                        tabName = "tabGLMQModel"),
            shinydashboard::menuSubItem("Poisson Autoregressive Model",
                                        tabName = "tabPAModel"),
-           shinydashboard::menuItem(htmltools::HTML("AutoRegressive Integrated<br />Moving Average"), startExpanded = TRUE,
-                                    shinydashboard::menuSubItem("Auto Regressor", tabName="tabARIMA"),
-                                    shinydashboard::menuSubItem("External Regressor", tabName="tabARIMAext"))
-        ),
-        shinydashboard::menuItem("Map",
-                                 icon = shiny::icon("map"), tabName = "tabMap")
+           #shinydashboard::menuItem(htmltools::HTML("AutoRegressive Integrated<br />Moving Average"), startExpanded = TRUE,
+           #                        shinydashboard::menuSubItem("Auto Regressor", tabName="tabARIMA"),
+           #                        shinydashboard::menuSubItem("External Regressor", tabName="tabARIMAext"))
+           shinydashboard::menuSubItem(htmltools::HTML("AutoRegressive Integrated<br />Moving Average"),
+                                   tabName="tabARIMA"),
+           shinydashboard::menuSubItem(htmltools::HTML("AutoRegressive Integrated<br />Moving Average<br />with External Regressor"),
+                                       tabName="tabARIMAext")
+        )#,
+        #shinydashboard::menuItem("Map",
+        #                         icon = shiny::icon("map"), tabName = "tabMap")
       )
     ),
     shinydashboard::dashboardBody(
