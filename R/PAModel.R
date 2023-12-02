@@ -96,6 +96,12 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
           shiny::selectInput(shiny::NS(id,"area"), "Area Colname",
                              choices = colnames(data())),
           shiny::uiOutput(shiny::NS(id, 'areaui')),
+          shiny::selectInput(
+            shiny::NS(id, "confidenceLevels"),
+            "Confidence Levels",
+            choices = c("99%", "95%", "90%", "80%"),
+            selected = "95%"
+          ),
           shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create")
         )
       })
@@ -138,10 +144,10 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
       yhat(if(y1 < y2) yhat1 else yhat2)
 
       output$plotUi <- shiny::renderUI({
-        shiny::plotOutput(shiny::NS(id, "plot"), width = "100%")
+        plotly::plotlyOutput(shiny::NS(id, "plot"), width = "100%")
       })
 
-      output$plot <- shiny::renderPlot({
+      output$plot <- plotly::renderPlotly({
         ggplot2::ggplot(d, ggplot2::aes(x = as.Date(.data[[input$date]]), y = yhat())) +
           ggplot2::geom_point(ggplot2::aes(x = as.Date(.data[[input$date]]), y = .data[[input$var]]), alpha=.5,
                      position=ggplot2::position_jitter(h=.1)) +
@@ -156,10 +162,16 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
 
       h <- 21
       n <- dim(d)[1]
-      pred.date <- seq(as.Date(d[[input$date]])[n]+1, by=1, length.out=h)
-      alpha <- 0.05
+      #pred.date <- seq(as.Date(d[[input$date]])[n]+1, by=1, length.out=h)
+      #alpha <- 0.05
+      alpha <- switch (input$confidenceLevels,
+        "99%" = 0.01,
+        "95%" = 0.05,
+        "90%" = 0.1,
+        "80%" = 0.2
+      )
 
-      pred <- predict(fit(), n.ahead=h, level=1-alpha, global=TRUE, B=2000)
+      #pred <- predict(fit(), n.ahead=h, level=1-alpha, global=TRUE, B=2000)
       pred.var <- predict(fit(), n.ahead = h, level = 1-alpha, global = TRUE, B=2000)
 
       pred.fit.var2<-data.frame(date=seq(as.Date(d[[input$date]])[n]+1, by=1,length.out=h),
@@ -178,9 +190,9 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
       pred.fit.var<-rbind(pred.fit.var1,pred.fit.var2)
 
       output$pPlotUi <- renderUI({
-        shiny::plotOutput(shiny::NS(id, "pPlot"), width = "100%")
+        plotly::plotlyOutput(shiny::NS(id, "pPlot"), width = "100%")
       })
-      output$pPlot <- renderPlot({
+      output$pPlot <- plotly::renderPlotly({
         ggplot2::ggplot(pred.fit.var, ggplot2::aes(x=date,y=fit) )+
           ggplot2::geom_point(ggplot2::aes(x=date, y=.data[[input$var]]))+
           ggplot2::geom_line(linewidth = 0.6, color="red")+
