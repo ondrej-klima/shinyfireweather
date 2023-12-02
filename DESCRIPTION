@@ -31,7 +31,8 @@ Imports:
     rhandsontable,
     plotly,
     mgcv,
-    bs4Dash
+    bs4Dash,
+    sortable
 Depends: 
     R (>= 2.10)
 LazyData: true

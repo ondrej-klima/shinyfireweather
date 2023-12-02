@@ -9,7 +9,7 @@ ui <- function() {
       bs4Dash::sidebarMenu(
         bs4Dash::menuSubItem("Info",
                                     tabName = "tabInfo",
-                                    icon = shiny::icon("circle-info")),
+                                    icon = shiny::icon("info")),
         bs4Dash::menuItem("Data",
                                  icon = shiny::icon("database"),
                                  startExpanded = TRUE,
