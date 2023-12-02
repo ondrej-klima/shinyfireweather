@@ -6,8 +6,8 @@
 LModelUi <- function(id) {
   shiny::fluidPage(
     shinybusy::add_busy_spinner(spin = "fading-circle"),
-    tags$head(
-      tags$style(HTML(".bucket-list-container {min-height: 350px;}"))
+    shiny::tags$head(
+      shiny::tags$style(HTML(".bucket-list-container {min-height: 350px;}"))
     ),
 
 
