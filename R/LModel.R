@@ -7,9 +7,8 @@ LModelUi <- function(id) {
   shiny::fluidPage(
     shinybusy::add_busy_spinner(spin = "fading-circle"),
     shiny::tags$head(
-      shiny::tags$style(HTML(".bucket-list-container {min-height: 350px;}"))
+      shiny::tags$style(htmltools::HTML(".bucket-list-container {min-height: 350px;}"))
     ),
-
 
     bs4Dash::tabBox(title = "Model", width = 12,
                            shiny::tabPanel('Create', shiny::uiOutput(
