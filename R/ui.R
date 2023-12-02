@@ -44,11 +44,34 @@ ui <- function() {
                                    tabName="tabARIMA"),
            bs4Dash::menuSubItem(htmltools::HTML("AutoRegressive Integrated<br />Moving Average<br />with External Regressor"),
                                        tabName="tabARIMAext")
-        )#,
+        ),
+        bs4Dash::menuItem("Mean Values Estimation",
+                          icon = shiny::icon("bullseye"),
+                          startExpanded = TRUE,
+              bs4Dash::menuSubItem(htmltools::HTML("Daily Poisson"),
+                          tabName = "tabDailyPoisson", icon = shiny::icon("calendar-o")
+              ),
+              bs4Dash::menuSubItem(htmltools::HTML("Daily Quasi-Poisson"),
+                          tabName = "tabLModel", icon = shiny::icon("calendar-o")
+              ),
+              bs4Dash::menuSubItem(htmltools::HTML("Daily Bootstrap"),
+                          tabName = "tabLModel", icon = shiny::icon("calendar-o")
+              ),
+              bs4Dash::menuSubItem(htmltools::HTML("Monthly Poisson"),
+                                   tabName = "tabLModel", icon = shiny::icon("calendar")
+              ),
+              bs4Dash::menuSubItem(htmltools::HTML("Monthly Quasi-Poisson"),
+                                   tabName = "tabLModel", icon = shiny::icon("calendar")
+              ),
+              bs4Dash::menuSubItem(htmltools::HTML("Monthly Bootstrap"),
+                                   tabName = "tabLModel", icon = shiny::icon("calendar")
+              )
+
+
         #bs4Dash::menuItem("Map",
         #                         icon = shiny::icon("map"), tabName = "tabMap")
       )
-    ),
+    )),
     bs4Dash::dashboardBody(
       bs4Dash::tabItems(
         bs4Dash::tabItem(tabName = 'tabInfo', infoUi('info')),
@@ -62,8 +85,8 @@ ui <- function() {
         bs4Dash::tabItem(tabName = 'tabPAModel', PAModelUi('PAModel')),
         bs4Dash::tabItem(tabName = 'tabARIMA', ARIMAextModelUi('ARIMA')),
         bs4Dash::tabItem(tabName = 'tabARIMAext', ARIMAextModelUi('ARIMAext')),
-        bs4Dash::tabItem(tabName = 'tabMap',
-                leaflet::leafletOutput('map')
+        bs4Dash::tabItem(tabName = 'tabDailyPoisson', DailyPoissonUi('DailyPoisson')),
+        bs4Dash::tabItem(tabName = 'tabMap', leaflet::leafletOutput('map')
         )
       )
     )

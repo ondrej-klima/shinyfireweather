@@ -32,7 +32,8 @@ Imports:
     plotly,
     mgcv,
     bs4Dash,
-    sortable
+    sortable,
+    DescTools
 Depends: 
     R (>= 2.10)
 LazyData: true
