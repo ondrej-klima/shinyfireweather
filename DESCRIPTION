@@ -30,7 +30,8 @@ Imports:
     stats,
     rhandsontable,
     plotly,
-    mgcv
+    mgcv,
+    bs4Dash
 Depends: 
     R (>= 2.10)
 LazyData: true
