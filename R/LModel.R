@@ -151,7 +151,7 @@ LModelServer <- function(id, data1, data2, data3, data4) {
                  "Data 3" = data3$data(),
                  "Data 4" = data4$data()))
 
-      output$bucket <- renderUI({
+      output$bucket <- shiny::renderUI({
         sortable::bucket_list(
           header = "Drag the items in any desired bucket",
           group_name = "bucket_list_group",
