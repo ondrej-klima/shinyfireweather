@@ -56,7 +56,7 @@ ui <- function() {
         bs4Dash::tabItem(tabName = 'tabData2', editDataUi('data2')),
         bs4Dash::tabItem(tabName = 'tabData3', editDataUi('data3')),
         bs4Dash::tabItem(tabName = 'tabData4', editDataUi('data4')),
-        bs4Dash::tabItem(tabName = 'tabLModel', GLModelUi('LModel')),
+        bs4Dash::tabItem(tabName = 'tabLModel', LModelUi('LModel')),
         bs4Dash::tabItem(tabName = 'tabGLModel', GLModelUi('GLModel')),
         bs4Dash::tabItem(tabName = 'tabGLMQModel', GLMQuasiModelUi('GLMQModel')),
         bs4Dash::tabItem(tabName = 'tabPAModel', PAModelUi('PAModel')),

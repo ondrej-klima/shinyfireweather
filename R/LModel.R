@@ -4,13 +4,18 @@
 #'
 
 LModelUi <- function(id) {
-  shiny::fluidRow(
+  shiny::fluidPage(
     shinybusy::add_busy_spinner(spin = "fading-circle"),
+    tags$head(
+      tags$style(HTML(".bucket-list-container {min-height: 350px;}"))
+    ),
 
 
-    bs4Dash::tabBox(title = "Retrieve Model", width = 12,
+    bs4Dash::tabBox(title = "Model", width = 12,
                            shiny::tabPanel('Create', shiny::uiOutput(
-                             shiny::NS(id, "checkboxUi"))
+                             shiny::NS(id, "checkboxUi")
+
+                             )
                            ),
                            shiny::tabPanel('Load', DT::DTOutput(
                              shiny::NS(id, "coltable"))
@@ -25,6 +30,9 @@ LModelUi <- function(id) {
                              shiny::tableOutput(shiny::NS(id, 'tab')),
                              shiny::verbatimTextOutput(shiny::NS(id, 'acc'))
                            ))),
+
+    shiny::uiOutput(shiny::NS(id,'bucket')),
+
 
     bs4Dash::tabBox(title = "Plots", width = 12,
                            shiny::tabPanel('Fit', htmltools::tagList(
@@ -49,6 +57,7 @@ LModelUi <- function(id) {
 
 
   )
+
 }
 
 
@@ -66,13 +75,16 @@ LModelServer <- function(id, data1, data2, data3, data4) {
     predCi <- reactiveVal()
 
     output$checkboxUi <- renderUI({
-      htmltools::tagList(
+      shiny::fluidRow(
+        column(6,
         shiny::selectInput(
           shiny::NS(id, "dataChoice"),
           "Use Data From",
           choices = c("Data 1", "Data 2", "Data 3", "Data 4")
-        ),
-        shiny::uiOutput(NS(id, "factors")),
+        )),
+        column(6,
+        shiny::uiOutput(NS(id, "factors"))
+        )
       )
     })
 
@@ -139,15 +151,34 @@ LModelServer <- function(id, data1, data2, data3, data4) {
                  "Data 3" = data3$data(),
                  "Data 4" = data4$data()))
 
+      output$bucket <- renderUI({
+        sortable::bucket_list(
+          header = "Drag the items in any desired bucket",
+          group_name = "bucket_list_group",
+          orientation = "horizontal",
+          sortable::add_rank_list(
+            text = "Data Columns",
+            labels = colnames(data()
+            ),
+            input_id = shiny::NS(id,"rank_list_1")
+          ),
+          sortable::add_rank_list(
+            text = "Predictors",
+            labels = NULL,
+            input_id = shiny::NS(id,"rank_list_2")
+          )
+        )
+      })
+
       output$factors <- renderUI({
         htmltools::tagList(
           shiny::selectInput(shiny::NS(id,"var"), "Dependent Variable",
                              choices = colnames(data())
           ),
-          shiny::checkboxGroupInput(shiny::NS(id,"cols"),
-                                    "Factors",
-                                    colnames(data()),
-                                    inline = TRUE),
+          #shiny::checkboxGroupInput(shiny::NS(id,"cols"),
+          #                          "Factors",
+          #                          colnames(data()),
+          #                          inline = TRUE),
           shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create")
         )
       })
@@ -155,7 +186,7 @@ LModelServer <- function(id, data1, data2, data3, data4) {
 
     observeEvent(input$buttonLearn, {
       formula <- as.formula(
-        sprintf("%s~%s", input$var, paste(input$cols, collapse="+"))
+        sprintf("%s~%s", input$var, paste(input$rank_list_2, collapse="+"))
       )
       mod1.glm(lm(formula, data=as.data.frame(data())))
 
