@@ -91,6 +91,12 @@ ARIMAModelServer <- function(id, data1, data2, data3, data4) {
                              choices = colnames(data())),
           #shiny::selectInput(shiny::NS(id,"regressor"), "Regressor Colname",
           #                   choices = colnames(data())),
+          shiny::selectInput(
+            shiny::NS(id, "confidenceLevels"),
+            "Confidence Levels",
+            choices = c("99%", "95%", "90%", "80%"),
+            selected = "95%"
+          ),
           shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create")
         )
       })
@@ -115,14 +121,14 @@ ARIMAModelServer <- function(id, data1, data2, data3, data4) {
       fit.var[input$var] = d[[input$var]]
 
       output$plotUi <- shiny::renderUI({
-        shiny::plotOutput(shiny::NS(id, "plot"), width = "100%")
+        plotly::plotlyOutput(shiny::NS(id, "plot"), width = "100%")
       })
 
-      output$plot <- shiny::renderPlot({
-        ggplot2::ggplot(fit.var, ggplot2::aes(x=date,y=fit))+
+      output$plot <- plotly::renderPlotly({
+        plotly::ggplotly(ggplot2::ggplot(fit.var, ggplot2::aes(x=date,y=fit))+
           ggplot2::geom_point(ggplot2::aes(x=date,y=.data[[input$var]]),alpha=.5)+
           ggplot2::geom_line(linewidth = 0.6,color="red")+
-          ggplot2::labs(x = "", y = input$var)
+          ggplot2::labs(x = "", y = input$var))
       })
 
       output$fittable <- DT::renderDT({
@@ -134,7 +140,13 @@ ARIMAModelServer <- function(id, data1, data2, data3, data4) {
       pred.date <- seq(as.Date(d[[input$date]])[n]+1, by=1, length.out=h)
       pred.week <- (lubridate::wday(pred.date, week_start = 1) > 5) * 1
 
-      alpha<-0.05
+      #alpha<-0.05
+      alpha <- switch (input$confidenceLevels,
+                       "99%" = 0.01,
+                       "95%" = 0.05,
+                       "90%" = 0.1,
+                       "80%" = 0.2
+      )
 
       pred.var <- forecast::forecast(fit(), h=h, level = (1-alpha) * 100)
       pred.fit.var2<-data.frame(date=seq(fit.var$date[n]+1, by=1,length.out=h),
@@ -152,7 +164,7 @@ ARIMAModelServer <- function(id, data1, data2, data3, data4) {
 
       pred.fit.var<-rbind(pred.fit.var1,pred.fit.var2)
 
-      output$pPlotUi <- renderUI({
+      output$pPlotUi <- shiny::renderUI({
         plotly::plotlyOutput(shiny::NS(id, "pPlot"), width = "100%")
       })
       output$pPlot <- plotly::renderPlotly({
