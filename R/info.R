@@ -8,7 +8,7 @@ infoUi <- function(id) {
     shinybusy::add_busy_spinner(spin = "fading-circle"),
 
 
-    shinydashboard::tabBox(title = NULL, width = 12,
+    bs4Dash::tabBox(title = NULL, width = 12,
                            shiny::tabPanel('Vysvětlovaná proměnná',
                              htmltools::tags$style('#myid1 * { word-wrap: break-word; }'),
                              htmltools::div(id='myid1', rhandsontable::rHandsontableOutput(

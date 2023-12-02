@@ -8,7 +8,7 @@ ARIMAextModelUi <- function(id) {
     shinybusy::add_busy_spinner(spin = "fading-circle"),
 
 
-    shinydashboard::tabBox(title = "Retrieve Model", width = 12,
+    bs4Dash::tabBox(title = "Retrieve Model", width = 12,
                            shiny::tabPanel('Create', shiny::uiOutput(
                              shiny::NS(id, "checkboxUi"))
                            ),
@@ -19,7 +19,7 @@ ARIMAextModelUi <- function(id) {
                              shiny::NS(id, "summary"))
                            )),
 
-    shinydashboard::tabBox(title = "Plots", width = 12,
+    bs4Dash::tabBox(title = "Plots", width = 12,
                            shiny::tabPanel('Fit', htmltools::tagList(
                              shiny::uiOutput(shiny::NS(id, 'fitUi'))
                            )),

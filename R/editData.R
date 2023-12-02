@@ -7,11 +7,11 @@ editDataUi <- function(id) {
     shinybusy::add_busy_spinner(spin = "fading-circle"),
     shiny::uiOutput(shiny::NS(id, "inputTabs")),
 
-    shinydashboard::box(title = "Data Preview", width = 12,
+    bs4Dash::box(title = "Data Preview", width = 12,
         DT::DTOutput(shiny::NS(id, "dtable"))
     ),
 
-    shinydashboard::tabBox(title = "Edit Column", width = 12,
+    bs4Dash::tabBox(title = "Edit Column", width = 12,
       shiny::tabPanel('Alter/Update', shiny::uiOutput(
         shiny::NS(id, "selectColumn"))),
       shiny::tabPanel('Column Preview', DT::DTOutput(
@@ -20,7 +20,7 @@ editDataUi <- function(id) {
         shiny::NS(id, "aggregate")))
     ),
 
-    shinydashboard::tabBox(title = "Export Data", width = 12,
+    bs4Dash::tabBox(title = "Export Data", width = 12,
       shiny::tabPanel("CSV File",
         htmltools::tagList(
           shiny::downloadButton(shiny::NS(id, "downloadData"), "Download")
@@ -112,7 +112,7 @@ editDataServer <- function(id,
           shiny::actionButton(shiny::NS(id, "selectJoinButton"), "Select"),
           shiny::uiOutput(NS(id, 'joinColumns'))
         ))
-        shinydashboard::tabBox(title = "Import Data", width = 12,
+        bs4Dash::tabBox(title = "Import Data", width = 12,
                tabExample,
                tabJoin,
                tabSingleFile,
@@ -122,7 +122,7 @@ editDataServer <- function(id,
         )
       }
       else {
-        shinydashboard::tabBox(title = "Import Data", width = 12,
+        bs4Dash::tabBox(title = "Import Data", width = 12,
                tabExample,
                tabSingleFile,
                tabMultipleFile,
