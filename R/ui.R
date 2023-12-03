@@ -55,7 +55,7 @@ ui <- function() {
                           tabName = "tabDailyQuasiPoisson", icon = shiny::icon("calendar-o")
               ),
               bs4Dash::menuSubItem(htmltools::HTML("Daily Bootstrap"),
-                          tabName = "tabLModel", icon = shiny::icon("calendar-o")
+                          tabName = "tabDailyBootstrap", icon = shiny::icon("calendar-o")
               ),
               bs4Dash::menuSubItem(htmltools::HTML("Monthly Poisson"),
                                    tabName = "tabLModel", icon = shiny::icon("calendar")
@@ -87,6 +87,7 @@ ui <- function() {
         bs4Dash::tabItem(tabName = 'tabARIMAext', ARIMAextModelUi('ARIMAext')),
         bs4Dash::tabItem(tabName = 'tabDailyPoisson', DailyPoissonUi('DailyPoisson')),
         bs4Dash::tabItem(tabName = 'tabDailyQuasiPoisson', DailyQuasiPoissonUi('DailyQuasiPoisson')),
+        bs4Dash::tabItem(tabName = 'tabDailyBootstrap', DailyQuasiPoissonUi('DailyBootstrap')),
         bs4Dash::tabItem(tabName = 'tabMap', leaflet::leafletOutput('map')
         )
       )
