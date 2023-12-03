@@ -58,7 +58,7 @@ ui <- function() {
                           tabName = "tabDailyBootstrap", icon = shiny::icon("calendar-o")
               ),
               bs4Dash::menuSubItem(htmltools::HTML("Monthly Poisson"),
-                                   tabName = "tabLModel", icon = shiny::icon("calendar")
+                                   tabName = "tabMonthlyPoisson", icon = shiny::icon("calendar")
               ),
               bs4Dash::menuSubItem(htmltools::HTML("Monthly Quasi-Poisson"),
                                    tabName = "tabLModel", icon = shiny::icon("calendar")
@@ -88,6 +88,7 @@ ui <- function() {
         bs4Dash::tabItem(tabName = 'tabDailyPoisson', DailyPoissonUi('DailyPoisson')),
         bs4Dash::tabItem(tabName = 'tabDailyQuasiPoisson', DailyQuasiPoissonUi('DailyQuasiPoisson')),
         bs4Dash::tabItem(tabName = 'tabDailyBootstrap', DailyQuasiPoissonUi('DailyBootstrap')),
+        bs4Dash::tabItem(tabName = 'tabMonthlyPoisson', DailyPoissonUi('MonthlyPoisson')),
         bs4Dash::tabItem(tabName = 'tabMap', leaflet::leafletOutput('map')
         )
       )

@@ -38,6 +38,7 @@ server <- function(input, output, session) {
   DailyPoissonServer('DailyPoisson', data1, data2, data3, data4)
   DailyQuasiPoissonServer('DailyQuasiPoisson', data1, data2, data3, data4)
   DailyBootstrapServer('DailyBootstrap', data1, data2, data3, data4)
+  MonthlyPoissonServer('MonthlyPoisson', data1, data2, data3, data4)
 
   # https://www.jla-data.net/cze/package-rczechia/
   output$map <- leaflet::renderLeaflet({
