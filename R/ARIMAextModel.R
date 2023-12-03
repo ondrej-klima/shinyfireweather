@@ -47,11 +47,10 @@ ARIMAextModelServer <- function(id, data1, data2, data3, data4) {
     data <- reactiveVal()
     predictData <- reactiveVal()
     ci <- reactiveVal()
-    predCi <- reactiveVal()
     yhat <- reactiveVal()
     fit <- reactiveVal()
     varts <- reactiveVal()
-
+    predCi <- reactiveVal()
 
     output$checkboxUi <- renderUI({
       htmltools::tagList(
@@ -167,6 +166,7 @@ ARIMAextModelServer <- function(id, data1, data2, data3, data4) {
       output$pPlotUi <- shiny::renderUI({
         plotly::plotlyOutput(shiny::NS(id, "pPlot"), width = "100%")
       })
+      predCi(pred.fit.var)
       output$pPlot <- plotly::renderPlotly({
         plotly::ggplotly(ggplot2::ggplot(pred.fit.var, ggplot2::aes(x=date,y=fit) )+
           ggplot2::geom_point(ggplot2::aes(x=date, y=.data[[input$var]]))+
@@ -179,5 +179,10 @@ ARIMAextModelServer <- function(id, data1, data2, data3, data4) {
         DT::datatable(pred.fit.var, options = list(scrollX = TRUE))
       })
     })
+    return(
+      list(
+        data = predCi
+      )
+    )
   })
 }

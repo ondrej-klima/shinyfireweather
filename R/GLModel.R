@@ -338,6 +338,11 @@ GLModelServer <- function(id, data1, data2, data3, data4) {
         plotly::ggplotly(p)
       })
     })
+    return(
+      list(
+        data = predCi
+      )
+    )
   })
   # https://stackoverflow.com/questions/42454097/dynamic-number-of-x-values-dependent-variables-in-glm-function-in-r-isnt-givi
 }

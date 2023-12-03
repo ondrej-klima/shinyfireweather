@@ -29,18 +29,20 @@ server <- function(input, output, session) {
                             data3 = data3,
                             data4 = data4)
 
-  LModelServer('LModel', data1, data2, data3, data4)
-  GLModelServer('GLModel', data1, data2, data3, data4)
-  GLMQuasiModelServer('GLMQModel', data1, data2, data3, data4)
-  PAModelServer('PAModel', data1, data2, data3, data4)
-  ARIMAModelServer('ARIMA', data1, data2, data3, data4)
-  ARIMAextModelServer('ARIMAext', data1, data2, data3, data4)
-  DailyPoissonServer('DailyPoisson', data1, data2, data3, data4)
-  DailyQuasiPoissonServer('DailyQuasiPoisson', data1, data2, data3, data4)
-  DailyBootstrapServer('DailyBootstrap', data1, data2, data3, data4)
-  MonthlyPoissonServer('MonthlyPoisson', data1, data2, data3, data4)
-  MonthlyQuasiPoissonServer('MonthlyQuasiPoisson', data1, data2, data3, data4)
-  MonthlyBootstrapServer('MonthlyBootstrap', data1, data2, data3, data4)
+  c1 <- LModelServer('LModel', data1, data2, data3, data4)
+  c2 <- GLModelServer('GLModel', data1, data2, data3, data4)
+  c3 <- GLMQuasiModelServer('GLMQModel', data1, data2, data3, data4)
+  c4 <- PAModelServer('PAModel', data1, data2, data3, data4)
+  c5 <- ARIMAModelServer('ARIMA', data1, data2, data3, data4)
+  c6 <- ARIMAextModelServer('ARIMAext', data1, data2, data3, data4)
+  c7 <- DailyPoissonServer('DailyPoisson', data1, data2, data3, data4)
+  c8 <- DailyQuasiPoissonServer('DailyQuasiPoisson', data1, data2, data3, data4)
+  c9 <- DailyBootstrapServer('DailyBootstrap', data1, data2, data3, data4)
+  c10 <- MonthlyPoissonServer('MonthlyPoisson', data1, data2, data3, data4)
+  c11 <- MonthlyQuasiPoissonServer('MonthlyQuasiPoisson', data1, data2, data3, data4)
+  c12 <- MonthlyBootstrapServer('MonthlyBootstrap', data1, data2, data3, data4)
+
+  CostsEvaluationServer('CostsEvaluation', c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12)
 
   # https://www.jla-data.net/cze/package-rczechia/
   output$map <- leaflet::renderLeaflet({

@@ -3,7 +3,7 @@
 #' This function provides UI for the model setup.
 #'
 
-MonthlyPoissonUi <- function(id) {
+CostsEvaluationUi <- function(id) {
   shiny::fluidRow(
     shinybusy::add_busy_spinner(spin = "fading-circle"),
 
@@ -33,7 +33,10 @@ MonthlyPoissonUi <- function(id) {
 #' This function provides server for the data edit table.
 #' @importFrom magrittr "%>%"
 #'
-MonthlyPoissonServer <- function(id, data1, data2, data3, data4) {
+CostsEvaluationServer <- function(id,
+                                  c1, c2, c3, c4,
+                                  c5, c6, c7, c8,
+                                  c9, c10, c11, c12) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- reactiveVal()
     predictData <- reactiveVal()
@@ -48,33 +51,36 @@ MonthlyPoissonServer <- function(id, data1, data2, data3, data4) {
 
     output$checkboxUi <- renderUI({
       shiny::fluidRow(
-        shiny::column(3,
+        shiny::column(6,
                       isolate(
           shiny::selectInput(
             shiny::NS(id, "dataChoice"),
             "Use Data From",
-            choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+            choices = c(
+              "Lineární model",
+              "Poissonovský zobecněný aditivní model",
+              "Kvazi-Poissonovský zobecněný aditivní model",
+              "Poissonovský autoregresní model",
+              "Autoregresní integrovaný klouzavý průměr",
+              "Autoregresní integrovaný klouzavý průměr s externím prediktorem",
+              "Denní Poissonovské střední hodnoty",
+              "Denní kvazi-Poissonovské střední hodnoty",
+              "Denní bootstrapové střední hodnoty",
+              "Měsíční Poissonovské střední hodnoty",
+              "Měsíční Poissonovské střední hodnoty",
+              "Měsíční Poissonovské střední hodnoty"
+            ),
+            size=12,
+            selectize=FALSE
           ))),
-          shiny::column(3,
-                        shiny::uiOutput(NS(id, "varUi"))),
-          shiny::column(3,
-                        shiny::uiOutput(shiny::NS(id, 'dateUi'))),
-          shiny::column(3,
-                        shiny::uiOutput(shiny::NS(id, 'areaColUi'))),
-          shiny::column(3,
-                        shiny::uiOutput(shiny::NS(id, 'areaui'))),
-          shiny::column(3,
-                        shiny::selectInput(
-                        shiny::NS(id, "confidenceLevels"),
-                          "Confidence Levels",
-                          choices = c("99%", "95%", "90%", "80%"),
-                          selected = "95%"
-                        )),
-          shiny::column(3,
-                        shiny::HTML("&nbsp;<br />"),
-                        shiny::actionButton(
-                          shiny::NS(id, "buttonLearn"), label = "Create")
-          )
+        shiny::column(6,
+          shiny::fluidRow(
+            shiny::column(6, shiny::uiOutput(NS(id, "varUi"))),
+            shiny::column(6, shiny::uiOutput(shiny::NS(id, 'dateUi'))),
+            shiny::column(6, shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create"))
+            )
+
+        )
       )
     })
 
@@ -87,10 +93,19 @@ MonthlyPoissonServer <- function(id, data1, data2, data3, data4) {
     observeEvent(input$dataChoice, {
 
         data(shiny::isolate({switch(input$dataChoice,
-                   "Data 1" = data1$data(),
-                   "Data 2" = data2$data(),
-                   "Data 3" = data3$data(),
-                   "Data 4" = data4$data())}))
+                   "Lineární model" = c1$data(),
+                   "Poissonovský zobecněný aditivní model" = c2$data(),
+                   "Kvazi-Poissonovský zobecněný aditivní model" = c3$data(),
+                   "Poissonovský autoregresní model" = c4$data(),
+                   "Autoregresní integrovaný klouzavý průměr" = c5$data(),
+                   "Autoregresní integrovaný klouzavý průměr s externím prediktorem" = c6$data(),
+                   "Denní Poissonovské střední hodnoty" = c7$data(),
+                   "Denní kvazi-Poissonovské střední hodnoty" = c8$data(),
+                   "Denní bootstrapové střední hodnoty" = c9$data(),
+                   "Měsíční Poissonovské střední hodnoty" = c10$data(),
+                   "Měsíční Poissonovské střední hodnoty" = c11$data(),
+                   "Měsíční Poissonovské střední hodnoty" = c12$data()
+                   )}))
 
       output$varUi <- shiny::renderUI(
         shiny::selectInput(
@@ -125,7 +140,8 @@ MonthlyPoissonServer <- function(id, data1, data2, data3, data4) {
       d <- data() %>%
         dplyr::filter(.data[[input$area]] == input$areacode) %>%
         dplyr::arrange(input$date) %>%
-        dplyr::mutate(year=as.factor(stringr::str_sub(as.character(.data[[input$date]]), 1, 4))) %>%
+        dplyr::mutate(year=as.factor(stringr::str_sub(
+          as.character(.data[[input$date]]), 1, 4))) %>%
         dplyr::mutate(month=as.factor(
                stringr::str_sub(as.character(.data[[input$date]]), 6, 7)))
 
@@ -171,47 +187,45 @@ MonthlyPoissonServer <- function(id, data1, data2, data3, data4) {
                     "90%" = 0.1,
                     "80%" = 0.2)
 
-      # odhad lambda - stredni hodnoty
-      LAMBDA<-X/N
-      # round(LAMBDA,digits = 3)
-      # ALPHA<-0.05  # hladina vyznamnosti
-
-      RES1<-NULL
-      for (i in 1:pocet.mesicu) {
-        if (!is.na(N[i])) {
-          RES1<-rbind(RES1,DescTools::PoissonCI(x=X[i], n=N[i],conf.level=1-ALPHA))
-        }
+      # bootstrap
+      RES3<-NULL
+      library(boot)
+      # function to obtain the mean
+      Bmean <- function(data, indices) {
+        d <- data[indices] # allows boot to select sample
+        return(mean(d))
       }
 
-      colnames(RES1)<-c("lambda","CIlow","CIup")
-      # RES1
+      for (i in 1:pocet.mesicu) {
+        DAT<-DATA.mesicni[DATA.mesicni$mesic==sprintf("%.2d",i),"pozary"]
+        pom1<-boot(data=DAT, statistic=Bmean, R=1000)
+        pom2<-boot.ci(pom1,type="basic",conf = 1-ALPHA)
+        RES3<-rbind(RES3,c(pom2$t0,pom2$basic[4:5]))
+      }
+
+      colnames(RES3)<-c("lambda","CIlow","CIup")
+      # RES3
 
       # grafy
       DATUM<-seq(1,12)
-      RESULT1<-data.frame(DATUM,RES1)
+      RESULT3<-data.frame(DATUM,RES3)
 
       output$plotUi <- shiny::renderUI({
         plotly::plotlyOutput(shiny::NS(id, "plot"), width = "100%")
       })
 
       output$plot <- plotly::renderPlotly({
-        ggplot2::ggplot(RESULT1, ggplot2::aes(x=DATUM,y=lambda),xlim=c(1,12))+
+        ggplot2::ggplot(RESULT3, ggplot2::aes(x=DATUM,y=lambda),xlim=c(1,12))+
           ggplot2::geom_point(ggplot2::aes(x=DATUM,y=lambda))+
           ggplot2::scale_x_continuous(breaks=seq(1, 12))+
           ggplot2::geom_errorbar(ggplot2::aes(ymin = CIlow, ymax = CIup),width=0.2)+
           ggplot2::labs(x = "", y = input$var)+
-          ggplot2::ggtitle(paste(input$var, input$areacode, "(Poisson)"))
+          ggplot2::ggtitle(paste(input$var, input$areacode, "(Bootstrap)"))
       })
 
       output$fittable <- DT::renderDT({
-        DT::datatable(RESULT1, options = list(scrollX = TRUE))
+        DT::datatable(RESULT3, options = list(scrollX = TRUE))
       })
-      predCi(RESULT1)
     })
-    return(
-      list(
-        data = predCi
-      )
-    )
   })
 }

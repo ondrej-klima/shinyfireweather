@@ -175,6 +175,12 @@ DailyPoissonServer <- function(id, data1, data2, data3, data4) {
       output$fittable <- DT::renderDT({
         DT::datatable(result1, options = list(scrollX = TRUE))
       })
+      predCi(result1)
     })
+    return(
+      list(
+        data = predCi
+      )
+    )
   })
 }

@@ -192,6 +192,13 @@ DailyBootstrapServer <- function(id, data1, data2, data3, data4) {
       output$fittable <- DT::renderDT({
         DT::datatable(result3, options = list(scrollX = TRUE))
       })
+      predCi(result3)
     })
+
+    return(
+      list(
+        data = predCi
+      )
+    )
   })
 }

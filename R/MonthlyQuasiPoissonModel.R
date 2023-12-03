@@ -204,6 +204,12 @@ MonthlyQuasiPoissonServer <- function(id, data1, data2, data3, data4) {
       output$fittable <- DT::renderDT({
         DT::datatable(RESULT2, options = list(scrollX = TRUE))
       })
+      predCi(RESULT2)
     })
+    return(
+      list(
+        data = predCi
+      )
+    )
   })
 }

@@ -178,6 +178,12 @@ ARIMAModelServer <- function(id, data1, data2, data3, data4) {
       output$dtable <- DT::renderDT({
         DT::datatable(pred.fit.var, options = list(scrollX = TRUE))
       })
+      predCi(pred.fit.var)
     })
+    return(
+      list(
+        data = predCi
+      )
+    )
   })
 }
