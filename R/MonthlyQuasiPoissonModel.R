@@ -3,7 +3,7 @@
 #' This function provides UI for the model setup.
 #'
 
-MonthlyPoissonUi <- function(id) {
+MonthlyQuasiPoissonUi <- function(id) {
   shiny::fluidRow(
     shinybusy::add_busy_spinner(spin = "fading-circle"),
 
@@ -33,7 +33,7 @@ MonthlyPoissonUi <- function(id) {
 #' This function provides server for the data edit table.
 #' @importFrom magrittr "%>%"
 #'
-MonthlyPoissonServer <- function(id, data1, data2, data3, data4) {
+MonthlyQuasiPoissonServer <- function(id, data1, data2, data3, data4) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- reactiveVal()
     predictData <- reactiveVal()
@@ -171,40 +171,38 @@ MonthlyPoissonServer <- function(id, data1, data2, data3, data4) {
                     "90%" = 0.1,
                     "80%" = 0.2)
 
-      # odhad lambda - stredni hodnoty
-      LAMBDA<-X/N
-      # round(LAMBDA,digits = 3)
-      # ALPHA<-0.05  # hladina vyznamnosti
-
-      RES1<-NULL
+      # quasipoisson
+      RES2<-NULL
       for (i in 1:pocet.mesicu) {
         if (!is.na(N[i])) {
-          RES1<-rbind(RES1,DescTools::PoissonCI(x=X[i], n=N[i],conf.level=1-ALPHA))
-        }
+        DAT<-DATA.mesicni[DATA.mesicni$mesic==sprintf("%.2d",i),"pozary"]
+        mod<-glm(DAT ~ 1, family=quasipoisson)
+        RES2<-rbind(RES2,c(exp(coef(mod)), exp(confint(mod,level = 1-ALPHA))))
+      }
       }
 
-      colnames(RES1)<-c("lambda","CIlow","CIup")
+      colnames(RES2)<-c("lambda","CIlow","CIup")
       # RES1
 
       # grafy
       DATUM<-seq(1,12)
-      RESULT1<-data.frame(DATUM,RES1)
+      RESULT2<-data.frame(DATUM,RES2)
 
       output$plotUi <- shiny::renderUI({
         plotly::plotlyOutput(shiny::NS(id, "plot"), width = "100%")
       })
 
       output$plot <- plotly::renderPlotly({
-        ggplot2::ggplot(RESULT1, ggplot2::aes(x=DATUM,y=lambda),xlim=c(1,12))+
+        ggplot2::ggplot(RESULT2, ggplot2::aes(x=DATUM,y=lambda),xlim=c(1,12))+
           ggplot2::geom_point(ggplot2::aes(x=DATUM,y=lambda))+
           ggplot2::scale_x_continuous(breaks=seq(1, 12))+
           ggplot2::geom_errorbar(ggplot2::aes(ymin = CIlow, ymax = CIup),width=0.2)+
           ggplot2::labs(x = "", y = input$var)+
-          ggplot2::ggtitle(paste(input$var, input$areacode, "(Poisson)"))
+          ggplot2::ggtitle(paste(input$var, input$areacode, "(quasiPoisson)"))
       })
 
       output$fittable <- DT::renderDT({
-        DT::datatable(RESULT1, options = list(scrollX = TRUE))
+        DT::datatable(RESULT2, options = list(scrollX = TRUE))
       })
     })
   })
