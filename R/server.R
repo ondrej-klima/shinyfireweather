@@ -36,6 +36,7 @@ server <- function(input, output, session) {
   ARIMAModelServer('ARIMA', data1, data2, data3, data4)
   ARIMAextModelServer('ARIMAext', data1, data2, data3, data4)
   DailyPoissonServer('DailyPoisson', data1, data2, data3, data4)
+  DailyQuasiPoissonServer('DailyQuasiPoisson', data1, data2, data3, data4)
 
   # https://www.jla-data.net/cze/package-rczechia/
   output$map <- leaflet::renderLeaflet({
