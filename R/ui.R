@@ -7,7 +7,7 @@ ui <- function() {
     bs4Dash::dashboardHeader(title = 'KSpredict'),
     bs4Dash::dashboardSidebar(
       bs4Dash::sidebarMenu(
-        bs4Dash::menuSubItem("Info",
+        bs4Dash::menuSubItem("Cíl predikce",
                                     tabName = "tabInfo",
                                     icon = shiny::icon("info")),
         bs4Dash::menuItem("Data",
@@ -31,9 +31,9 @@ ui <- function() {
                                  startExpanded = TRUE,
            bs4Dash::menuSubItem(htmltools::HTML("Lineární Model"),
                                  tabName = "tabLModel"),
-           bs4Dash::menuSubItem(htmltools::HTML("Poissonovský zobecněný<br />aditivní model"),
+           bs4Dash::menuSubItem(htmltools::HTML("Poissonovský zobecněný<br />model"),
                                  tabName = "tabGLModel"),
-           bs4Dash::menuSubItem(htmltools::HTML("Kvazi-poissonovský<br/>zobecněný aditivní<br/>model"),
+           bs4Dash::menuSubItem(htmltools::HTML("Kvazi-poissonovský<br/>zobecněný model"),
                                        tabName = "tabGLMQModel"),
            bs4Dash::menuSubItem(htmltools::HTML("Poissonovský <br/>autoregresní model"),
                                        tabName = "tabPAModel"),

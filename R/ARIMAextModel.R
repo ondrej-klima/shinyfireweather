@@ -20,7 +20,7 @@ ARIMAextModelUi <- function(id) {
                            )),
 
     bs4Dash::tabBox(title = "Zobrazení dat", width = 12,
-                           shiny::tabPanel('Tabulka zdrojových da', htmltools::tagList(
+                           shiny::tabPanel('Tabulka zdrojových dat', htmltools::tagList(
                              shiny::uiOutput(shiny::NS(id, 'fitUi'))
                            )),
                            shiny::tabPanel('Graf zdrojových dat', htmltools::tagList(

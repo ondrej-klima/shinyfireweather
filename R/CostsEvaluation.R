@@ -154,6 +154,37 @@ CostsEvaluationServer <- function(id,
         rhandsontable::hot_rows(rowHeights = 50)
       )
 
+    output$table2 <- rhandsontable::renderRHandsontable(
+      rhandsontable::rhandsontable(
+        data = df1(),
+        rowHeaders = TRUE,
+        contextMenu = FALSE,
+        stretchH = "all",
+        width = '100%',
+        height = 800,
+        colWidths = c(100, 250, 50, 50, 50),
+        colHeaders = c("Scénář", "Opatření", "Horní hranice", "Dolní hranice", "Pravděpodobnost"),
+        manualColumnResize = TRUE,
+        manualRowResize = TRUE,
+      ) %>%
+        rhandsontable::hot_rows(rowHeights = 50)
+    )
+
+    output$table3 <- rhandsontable::renderRHandsontable(
+      rhandsontable::rhandsontable(
+        data = df1(),
+        rowHeaders = TRUE,
+        contextMenu = FALSE,
+        stretchH = "all",
+        width = '100%',
+        height = 800,
+        colWidths = c(100, 250, 50, 50, 50),
+        colHeaders = c("Scénář", "Opatření", "Horní hranice", "Dolní hranice", "Pravděpodobnost"),
+        manualColumnResize = TRUE,
+        manualRowResize = TRUE,
+      ) %>%
+        rhandsontable::hot_rows(rowHeights = 50)
+    )
 
     output$fitUi <- renderUI({
       htmltools::tagList(
