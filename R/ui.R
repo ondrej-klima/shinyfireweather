@@ -29,45 +29,45 @@ ui <- function() {
         bs4Dash::menuItem("Model",
                                  icon = shiny::icon("chart-line"),
                                  startExpanded = TRUE,
-           bs4Dash::menuSubItem(htmltools::HTML("Linear Model"),
+           bs4Dash::menuSubItem(htmltools::HTML("Lineární Model"),
                                  tabName = "tabLModel"),
-           bs4Dash::menuSubItem(htmltools::HTML("Poisson Generalized<br />Additive Model"),
+           bs4Dash::menuSubItem(htmltools::HTML("Poissonovský zobecněný<br />aditivní model"),
                                  tabName = "tabGLModel"),
-           bs4Dash::menuSubItem(htmltools::HTML("Quasi-Poisson Generalized<br/>Additive Model"),
+           bs4Dash::menuSubItem(htmltools::HTML("Kvazi-poissonovský<br/>zobecněný aditivní<br/>model"),
                                        tabName = "tabGLMQModel"),
-           bs4Dash::menuSubItem("Poisson Autoregressive Model",
+           bs4Dash::menuSubItem(htmltools::HTML("Poissonovský <br/>autoregresní model"),
                                        tabName = "tabPAModel"),
            #bs4Dash::menuItem(htmltools::HTML("AutoRegressive Integrated<br />Moving Average"), startExpanded = TRUE,
            #                        bs4Dash::menuSubItem("Auto Regressor", tabName="tabARIMA"),
            #                        bs4Dash::menuSubItem("External Regressor", tabName="tabARIMAext"))
-           bs4Dash::menuSubItem(htmltools::HTML("AutoRegressive Integrated<br />Moving Average"),
+           bs4Dash::menuSubItem(htmltools::HTML("Autoregresní integrovaný<br />klouzavý průměr"),
                                    tabName="tabARIMA"),
-           bs4Dash::menuSubItem(htmltools::HTML("AutoRegressive Integrated<br />Moving Average<br />with External Regressor"),
+           bs4Dash::menuSubItem(htmltools::HTML("Autoregresní integrovaný<br />klouzavý průměr<br />s externím regresorem"),
                                        tabName="tabARIMAext")
         ),
-        bs4Dash::menuItem("Mean Values Estimation",
+        bs4Dash::menuItem(htmltools::HTML("Odhady středních<br>hodnot"),
                           icon = shiny::icon("bullseye"),
                           startExpanded = TRUE,
-              bs4Dash::menuSubItem(htmltools::HTML("Daily Poisson"),
+              bs4Dash::menuSubItem(htmltools::HTML("Poissonovský<br>denní odhad"),
                           tabName = "tabDailyPoisson", icon = shiny::icon("calendar-o")
               ),
-              bs4Dash::menuSubItem(htmltools::HTML("Daily Quasi-Poisson"),
+              bs4Dash::menuSubItem(htmltools::HTML("Kvazi-poissonovský<br>denní odhad"),
                           tabName = "tabDailyQuasiPoisson", icon = shiny::icon("calendar-o")
               ),
-              bs4Dash::menuSubItem(htmltools::HTML("Daily Bootstrap"),
+              bs4Dash::menuSubItem(htmltools::HTML("Bootstrapový<br>denní odhad"),
                           tabName = "tabDailyBootstrap", icon = shiny::icon("calendar-o")
               ),
-              bs4Dash::menuSubItem(htmltools::HTML("Monthly Poisson"),
+              bs4Dash::menuSubItem(htmltools::HTML("Poissonovský<br>měsíční odhad"),
                                    tabName = "tabMonthlyPoisson", icon = shiny::icon("calendar")
               ),
-              bs4Dash::menuSubItem(htmltools::HTML("Monthly Quasi-Poisson"),
+              bs4Dash::menuSubItem(htmltools::HTML("Kvazi-poissonovský<br>měsíční  odhad"),
                                    tabName = "tabMonthlyQuasiPoisson", icon = shiny::icon("calendar")
               ),
-              bs4Dash::menuSubItem(htmltools::HTML("Monthly Bootstrap"),
+              bs4Dash::menuSubItem(htmltools::HTML("Bootstrapový<br>měsíční odhad"),
                                    tabName = "tabMonthlyBootstrap", icon = shiny::icon("calendar")
               )
       ),
-      bs4Dash::menuItem("Cost Evaluation",
+      bs4Dash::menuItem(htmltools::HTML("Opatření k redukci<br>rizik"),
                         icon = shiny::icon("wallet"),
                         tabName = "tabCostsEvaluation")
     )),
@@ -86,10 +86,10 @@ ui <- function() {
         bs4Dash::tabItem(tabName = 'tabARIMAext', ARIMAextModelUi('ARIMAext')),
         bs4Dash::tabItem(tabName = 'tabDailyPoisson', DailyPoissonUi('DailyPoisson')),
         bs4Dash::tabItem(tabName = 'tabDailyQuasiPoisson', DailyQuasiPoissonUi('DailyQuasiPoisson')),
-        bs4Dash::tabItem(tabName = 'tabDailyBootstrap', DailyQuasiPoissonUi('DailyBootstrap')),
+        bs4Dash::tabItem(tabName = 'tabDailyBootstrap', DailyBootstrapUi('DailyBootstrap')),
         bs4Dash::tabItem(tabName = 'tabMonthlyPoisson', MonthlyPoissonUi('MonthlyPoisson')),
         bs4Dash::tabItem(tabName = 'tabMonthlyQuasiPoisson', MonthlyQuasiPoissonUi('MonthlyQuasiPoisson')),
-        bs4Dash::tabItem(tabName = 'tabMonthlyBootstrap', MonthlyQuasiPoissonUi('MonthlyBootstrap')),
+        bs4Dash::tabItem(tabName = 'tabMonthlyBootstrap', MonthlyBootstrapUi('MonthlyBootstrap')),
         bs4Dash::tabItem(tabName = 'tabCostsEvaluation', CostsEvaluationUi('CostsEvaluation')),
         bs4Dash::tabItem(tabName = 'tabMap', leaflet::leafletOutput('map')
         )

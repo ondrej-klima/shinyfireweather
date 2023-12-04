@@ -8,21 +8,21 @@ MonthlyPoissonUi <- function(id) {
     shinybusy::add_busy_spinner(spin = "fading-circle"),
 
 
-    bs4Dash::tabBox(title = "Retrieve Model", width = 12,
-                           shiny::tabPanel('Create', shiny::uiOutput(
-                             shiny::NS(id, "checkboxUi"))
-                           ),
-                           shiny::tabPanel('Load', DT::DTOutput(
-                             shiny::NS(id, "coltable"))
-                           )),
+    bs4Dash::tabBox(title = NULL, width = 12,
+                    shiny::tabPanel('Vytvořit model', shiny::uiOutput(
+                      shiny::NS(id, "checkboxUi"))
+                      #),
+                      #shiny::tabPanel('Load', DT::DTOutput(
+                      # shiny::NS(id, "coltable"))
+                    )),
 
-    bs4Dash::tabBox(title = "Plots", width = 12,
-                           shiny::tabPanel('Table', htmltools::tagList(
-                             shiny::uiOutput(shiny::NS(id, 'fitUi'))
-                           )),
-                           shiny::tabPanel('Plot', htmltools::tagList(
-                             shiny::uiOutput(shiny::NS(id, "plotUi"))
-                           ))
+    bs4Dash::tabBox(title = NULL, width = 12,
+                    shiny::tabPanel('Tabulka hodnot', htmltools::tagList(
+                      shiny::uiOutput(shiny::NS(id, 'fitUi'))
+                    )),
+                    shiny::tabPanel('Zobrazení v grafu', htmltools::tagList(
+                      shiny::uiOutput(shiny::NS(id, "plotUi"))
+                    ))
     )
   )
 }
@@ -50,31 +50,31 @@ MonthlyPoissonServer <- function(id, data1, data2, data3, data4) {
       shiny::fluidRow(
         shiny::column(3,
                       isolate(
-          shiny::selectInput(
-            shiny::NS(id, "dataChoice"),
-            "Use Data From",
-            choices = c("Data 1", "Data 2", "Data 3", "Data 4")
-          ))),
-          shiny::column(3,
-                        shiny::uiOutput(NS(id, "varUi"))),
-          shiny::column(3,
-                        shiny::uiOutput(shiny::NS(id, 'dateUi'))),
-          shiny::column(3,
-                        shiny::uiOutput(shiny::NS(id, 'areaColUi'))),
-          shiny::column(3,
-                        shiny::uiOutput(shiny::NS(id, 'areaui'))),
-          shiny::column(3,
                         shiny::selectInput(
+                          shiny::NS(id, "dataChoice"),
+                          "Zdroj dat",
+                          choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+                        ))),
+        shiny::column(3,
+                      shiny::uiOutput(NS(id, "varUi"))),
+        shiny::column(3,
+                      shiny::uiOutput(shiny::NS(id, 'dateUi'))),
+        shiny::column(3,
+                      shiny::uiOutput(shiny::NS(id, 'areaColUi'))),
+        shiny::column(3,
+                      shiny::uiOutput(shiny::NS(id, 'areaui'))),
+        shiny::column(3,
+                      shiny::selectInput(
                         shiny::NS(id, "confidenceLevels"),
-                          "Confidence Levels",
-                          choices = c("99%", "95%", "90%", "80%"),
-                          selected = "95%"
-                        )),
-          shiny::column(3,
-                        shiny::HTML("&nbsp;<br />"),
-                        shiny::actionButton(
-                          shiny::NS(id, "buttonLearn"), label = "Create")
-          )
+                        "Invervaly spolehlivosti",
+                        choices = c("99%", "95%", "90%", "80%"),
+                        selected = "95%"
+                      )),
+        shiny::column(3,
+                      shiny::HTML("&nbsp;<br />"),
+                      shiny::actionButton(
+                        shiny::NS(id, "buttonLearn"), label = "Vytvořit")
+        )
       )
     })
 
@@ -94,21 +94,21 @@ MonthlyPoissonServer <- function(id, data1, data2, data3, data4) {
 
       output$varUi <- shiny::renderUI(
         shiny::selectInput(
-          shiny::NS(id,"var"), "Dependent Variable",
+          shiny::NS(id,"var"), "Vysvětlovaná proměnná",
           choices = colnames(data())
         )
       )
 
       output$dateUi <- shiny::renderUI(
         shiny::selectInput(
-          shiny::NS(id,"date"), "Date Colname",
+          shiny::NS(id,"date"), "Sloupec s datumy",
           choices = colnames(data())
         )
       )
 
       output$areaColUi <- shiny::renderUI(
         shiny::selectInput(
-          shiny::NS(id,"area"), "Area Colname",
+          shiny::NS(id,"area"), "Sloupec s kraji",
           choices = colnames(data())
         )
       )
@@ -116,7 +116,7 @@ MonthlyPoissonServer <- function(id, data1, data2, data3, data4) {
 
     observeEvent(input$area, {
       output$areaui <- renderUI({
-        shiny::selectInput(shiny::NS(id,"areacode"), "Area",
+        shiny::selectInput(shiny::NS(id,"areacode"), "Kraj",
                            choices = unique(data()[[input$area]]))
       })
     })

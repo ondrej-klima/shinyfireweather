@@ -5,32 +5,35 @@
 editDataUi <- function(id) {
   shiny::fluidRow(
     shinybusy::add_busy_spinner(spin = "fading-circle"),
-    shiny::uiOutput(shiny::NS(id, "inputTabs")),
 
-    bs4Dash::box(title = "Data Preview", width = 12,
+    shiny::fluidRow(
+      shiny::column(12, shiny::uiOutput(shiny::NS(id, "inputTabs"), style = "width:100%"))
+    ),
+
+    bs4Dash::box(title = "Náhled dat", width = 12,
         DT::DTOutput(shiny::NS(id, "dtable"))
     ),
 
-    bs4Dash::tabBox(title = "Edit Column", width = 12,
-      shiny::tabPanel('Alter/Update', shiny::uiOutput(
+    bs4Dash::tabBox(title = "Úpravy sloupce", width = 12,
+      shiny::tabPanel('Pozměnit/Upravit', shiny::uiOutput(
         shiny::NS(id, "selectColumn"))),
-      shiny::tabPanel('Column Preview', DT::DTOutput(
+      shiny::tabPanel('Náhled unikátních hodnot', DT::DTOutput(
         shiny::NS(id, "coltable"))),
-      shiny::tabPanel('Aggregate', shiny::uiOutput(
+      shiny::tabPanel('Agregovat počet', shiny::uiOutput(
         shiny::NS(id, "aggregate")))
     ),
 
-    bs4Dash::tabBox(title = "Export Data", width = 12,
-      shiny::tabPanel("CSV File",
+    bs4Dash::tabBox(title = "Export dat", width = 12,
+      shiny::tabPanel("CSV Soubor",
         htmltools::tagList(
-          shiny::downloadButton(shiny::NS(id, "downloadData"), "Download")
+          shiny::downloadButton(shiny::NS(id, "downloadData"), "Stáhnout")
         )
       ),
-      shiny::tabPanel("Variable",
+      shiny::tabPanel("Proměnná R",
         htmltools::tagList(
           shiny::textInput(shiny::NS(id, "outvar"),
-                           "Store Environment Variable", "outvar"),
-          shiny::actionButton(shiny::NS(id, "storenv"), "Store")
+                           "Načíst do prostředí R", "outvar"),
+          shiny::actionButton(shiny::NS(id, "storenv"), "Načíst")
         )
       )
     )
@@ -61,58 +64,62 @@ editDataServer <- function(id,
     })
 
     output$inputTabs <- shiny::renderUI({
-      tabExample <- shiny::tabPanel("Example", htmltools::tagList(
-        htmltools::strong("Load example data"),
-        htmltools::br(),
-        shiny::actionButton(NS(id, "loadExample"), "Load")
+      tabExample <- shiny::tabPanel("Ukázková data", htmltools::tagList(
+        #htmltools::strong("Načíst ukázková data"),
+        #htmltools::br(),
+        shiny::actionButton(NS(id, "loadExample"), "Načíst ukázková data")
       ))
 
-      tabSingleFile <- shiny::tabPanel("Single File", htmltools::tagList(
-        shiny::fileInput(shiny::NS(id, "upload"), "Load Single File"),
+      tabSingleFile <- shiny::tabPanel("Soubor", htmltools::tagList(
+        shiny::fileInput(shiny::NS(id, "upload"), NULL),
         shiny::uiOutput(shiny::NS(id, 'checkboxUi')),
       ))
 
-      tabMultipleFile <- shiny::tabPanel("Multiple Files", htmltools::tagList(
+      tabMultipleFile <- shiny::tabPanel("Meteorologická data", htmltools::tagList(
         shiny::fileInput(shiny::NS(id, "uploadMultiple"),
-                        "Load Multiple Files",
+                        NULL, #"Soubory",
                         multiple = TRUE),
       ))
 
-      tabVariable <- shiny::tabPanel("Variable", htmltools::tagList(
+      tabVariable <- shiny::tabPanel("Proměnná R", htmltools::tagList(
+        shiny::column(4,
         shiny::selectInput(
           shiny::NS(id, "envar"),
-          "Load Environment Variable",
+          "Načíst proměnnou z prostředí R",
           choices = ls(envir = globalenv())),
-      ),
-      shiny::actionButton(shiny::NS(id, "loadenv"), "Load")
+      )),
+      shiny::actionButton(shiny::NS(id, "loadenv"), "Načíst")
       )
 
-      tabData <- shiny::tabPanel("Data", htmltools::tagList(
+      tabData <- shiny::tabPanel("Data ze záložky", htmltools::tagList(
+        shiny::column(4,
         shiny::selectInput(
           shiny::NS(id, "dataChoice"),
-          "Import Table From",
+          "Data ze záložky",
           choices = c("Data 1", "Data 2", "Data 3", "Data 4")
-        )
+        ))
       ),
-      shiny::actionButton(shiny::NS(id, "importTabButton"), "Import")
+      shiny::actionButton(shiny::NS(id, "importTabButton"), "Načíst")
       )
 
       if(!is.null(data1) && !is.null(data2)) {
-        tabJoin <- shiny::tabPanel("Join data", htmltools::tagList(
+        tabJoin <- shiny::tabPanel("Spojit data", htmltools::tagList(
+          shiny::fluidRow(
+          shiny::column(4,
           shiny::selectInput(
             shiny::NS(id, "joinDataChoice1"),
-            "Left Table",
+            "Levá tabulka",
             choices = c("Data 1", "Data 2", "Data 3", "Data 4")
-          ),
-          shiny::selectInput(
+          )),
+          shiny::column(4, shiny::selectInput(
             shiny::NS(id, "joinDataChoice2"),
-            "Right Table",
+            "Pravá tabulka",
             choices = c("Data 1", "Data 2", "Data 3", "Data 4")
-          ),
-          shiny::actionButton(shiny::NS(id, "selectJoinButton"), "Select"),
+          ))),
+          shiny::actionButton(shiny::NS(id, "selectJoinButton"), "Spojit"),
           shiny::uiOutput(NS(id, 'joinColumns'))
         ))
-        bs4Dash::tabBox(title = "Import Data", width = 12,
+        bs4Dash::tabBox(title = "Načtení dat", width = 12,
                tabExample,
                tabJoin,
                tabSingleFile,
@@ -122,12 +129,12 @@ editDataServer <- function(id,
         )
       }
       else {
-        bs4Dash::tabBox(title = "Import Data", width = 12,
+        bs4Dash::tabBox(title = "Načtení dat", width = 12,
                tabExample,
                tabSingleFile,
                tabMultipleFile,
                tabVariable,
-               tabData
+               tabData,
         )
       }
     })
@@ -261,40 +268,54 @@ editDataServer <- function(id,
     })
 
     output$selectColumn <- shiny::renderUI({
-      htmltools::div(style="display: inline-block", class = "row-fluid",
-          shiny::selectInput(shiny::NS(id, 'selectInput'),
-                             'Select Column',
-                             datanames(),
-                             selected = selcol()),
-          shiny::actionButton(shiny::NS(id, 'buttonDate'), 'Fix Date'),
-          shiny::actionButton(shiny::NS(id, 'buttonDateSplit'), 'Split date'),
-          shiny::actionButton(shiny::NS(id, 'buttonWeekend'), 'Add Weekend'),
-          shiny::actionButton(shiny::NS(id, 'buttonArea'), 'Fix Area'),
-          shiny::actionButton(shiny::NS(id, 'buttonDuplicate'), 'Duplicate'),
-          shiny::actionButton(shiny::NS(id, 'buttonDrop'), 'Drop'),
-          shiny::actionButton(shiny::NS(id, 'buttonRename'), 'Rename'),
+      shiny::fluidPage(
+      shiny::fluidRow(shiny::column(4,
+                      shiny::selectInput(shiny::NS(id, 'selectInput'),
+                                         'Upravit sloupec',
+                                         datanames(),
+                                         selected = selcol())
+                      ),
+                      shiny::column(4,shiny::textInput(shiny::NS(id, 'name'), 'Nový název/sloupec', NULL))
+      ),
+      shiny::fluidRow(shiny::column(12,
+                                    shiny::actionButton(shiny::NS(id, 'buttonDuplicate'), 'Duplikovat'),
+                                    shiny::actionButton(shiny::NS(id, 'buttonDrop'), 'Zrušit soupec'),
+                                    shiny::actionButton(shiny::NS(id, 'buttonRename'), 'Přejmenovat'))),
+      shiny::fluidRow(shiny::column(12,
+      #htmltools::div(style="display: inline-block", class = "row-fluid",
+
+          shiny::actionButton(shiny::NS(id, 'buttonDate'), 'Opravit Excelové datum'),
+          shiny::actionButton(shiny::NS(id, 'buttonDateSplit'), 'Rozdělit datum'),
+          shiny::actionButton(shiny::NS(id, 'buttonWeekend'), 'Přidat víkendy'),
+          shiny::actionButton(shiny::NS(id, 'buttonArea'), 'Převést kraje na zkratky'))),
+      shiny::fluidRow(shiny::column(12,
           shiny::actionButton(shiny::NS(id, 'buttonRLE'), 'RLE'),
-          shiny::actionButton(shiny::NS(id, 'buttonCumsum'), 'Cumsum'),
-          shiny::textInput(shiny::NS(id, 'name'), NULL, 'new_col_name'),
-          shiny::selectInput(shiny::NS(id, 'selectCol2'),
-                             'Source Column',
-                             datanames(),
-                             selected = selcol()),
-          shiny::actionButton(shiny::NS(id, 'buttonFill'), 'Fill Empty'),
-          shiny::actionButton(shiny::NS(id, 'buttonFill0'),
-                              'Fill Empty with 0'),
-          shiny::selectInput(shiny::NS(id, 'operator'), 'Filter',
-                             c('==', '!=', '>=', '>', '<=', '<', '!is.na')),
-          shiny::textInput(shiny::NS(id, 'filterValue'), NULL),
-          shiny::actionButton(shiny::NS(id, 'buttonFilter'), 'Filter'),
-      )
+          shiny::actionButton(shiny::NS(id, 'buttonCumsum'), 'Kumulované součty'))),
+      shiny::fluidRow(
+        shiny::column(4,
+                      shiny::selectInput(shiny::NS(id, 'selectCol2'),
+                                         'Použít data ze sloupce',
+                                         datanames(),
+                                         selected = selcol()))),
+      shiny::fluidRow(
+        shiny::column(12,
+          shiny::actionButton(shiny::NS(id, 'buttonFill'), 'Doplnit chybějící ze sloupce'),
+          shiny::actionButton(shiny::NS(id, 'buttonFill0'),'Doplnit chybějící hodnotou 0')
+      )),
+      shiny::fluidRow(shiny::column(4,shiny::selectInput(shiny::NS(id, 'operator'), 'Filtrovací operátor',
+                                                         c('==', '!=', '>=', '>', '<=', '<', '!is.na'))),
+                      shiny::column(4, shiny::textInput(shiny::NS(id, 'filterValue'), 'Porovnat s hodnotou')
+
+
+      )),
+      shiny::fluidRow(shiny::column(4, shiny::actionButton(shiny::NS(id, 'buttonFilter'), 'Filtrovat'))))#)
     })
 
     output$aggregate <- shiny::renderUI({
       htmltools::tagList(
         shiny::checkboxGroupInput(shiny::NS(id, 'aggregateCols'),
-                           'Columns', choices = datanames(), inline = TRUE),
-        shiny::actionButton(shiny::NS(id, 'buttonAggregate'), 'Count')
+                           'Agregovat počty ve skupinách podle sloupců', choices = datanames(), inline = TRUE),
+        shiny::actionButton(shiny::NS(id, 'buttonAggregate'), 'Agregovat')
       )
     })
 

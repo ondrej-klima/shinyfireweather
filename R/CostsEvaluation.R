@@ -8,14 +8,17 @@ CostsEvaluationUi <- function(id) {
     shinybusy::add_busy_spinner(spin = "fading-circle"),
 
 
-    bs4Dash::tabBox(title = "Retrieve Model", width = 12,
-                           shiny::tabPanel('Create',
+    bs4Dash::tabBox(title = NULL, width = 12,
+                           shiny::tabPanel('Přehled opatření',
                              shiny::uiOutput(shiny::NS(id, "checkboxUi")),
                              rhandsontable::rHandsontableOutput(shiny::NS(id, "table1"))
                            ),
-                           shiny::tabPanel('Load', DT::DTOutput(
-                             shiny::NS(id, "coltable"))
-                           ))
+                           shiny::tabPanel('Kvantitativní analýza',
+                             rhandsontable::rHandsontableOutput(shiny::NS(id, "table2"))
+                           ),
+                           shiny::tabPanel('Kvalitativní analýza',
+                            rhandsontable::rHandsontableOutput(shiny::NS(id, "table3"))
+                          ))
   )
 }
 
@@ -45,7 +48,7 @@ CostsEvaluationServer <- function(id,
                 rep("realistický scénář",2),
                 rep("mírně optimistický scénář",2),
                 rep("optimistický scénář",2),
-                rep("mírně optimistický scénář",2))
+                rep("výrazně optimistický scénář",2))
 
     upperb<-rep(NA,14) # zde by to chtelo nahrat horni meze jednotlivých intervalů
     # podle výsledků predikce tak jak je popsano v cl. 14 odst. 4 a 5
@@ -81,7 +84,7 @@ CostsEvaluationServer <- function(id,
     scenarioTab <- scenario
     scenarioTab[seq(7)*2]=NA
 
-    xtab <- data.frame(scenarioTab, measure, as.numeric(upperb), as.numeric(lowerb), prob)
+    xtab <- data.frame(scenarioTab, measure, upper=as.numeric(upperb), lower=as.numeric(lowerb), prob)
 
     #X<-reactiveVal(data.frame(scenarioTab,measure,as.numeric(upperb()), as.numeric(lowerb()),prob,costs,conseq,risk,BCR))
 
@@ -104,7 +107,7 @@ CostsEvaluationServer <- function(id,
                       isolate(
           shiny::selectInput(
             shiny::NS(id, "dataChoice"),
-            "Use Data From",
+            "Použít výsledky následujícího modelu",
             choices = c(
               "Lineární model",
               "Poissonovský zobecněný aditivní model",
@@ -127,8 +130,8 @@ CostsEvaluationServer <- function(id,
           shiny::fluidRow(
             #shiny::column(6, shiny::uiOutput(NS(id, "lowUi"))),
             #shiny::column(6, shiny::uiOutput(shiny::NS(id, 'highUi'))),
-            shiny::column(6, shiny::numericInput(shiny::NS(id, "low"), "Low value", 0)),
-            shiny::column(6, shiny::numericInput(shiny::NS(id, 'high'), "High value", 100)),
+            shiny::column(6, shiny::numericInput(shiny::NS(id, "low"), "Spodní hranice", 0)),
+            shiny::column(6, shiny::numericInput(shiny::NS(id, 'high'), "Horní hranice", 100)),
             #shiny::column(6, shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create"))
             )
         )
@@ -178,113 +181,26 @@ CostsEvaluationServer <- function(id,
 
 
       xtab2 <- xtab
+      xtab2$upper <- rep(as.numeric(NA), 14)
+      xtab2$lower <- rep(as.numeric(NA), 14)
       if(!is.null(data())) {
         d <- data() %>% dplyr::pull()
 
         if(length(d) > 0) {
-          xtab2[,3] <- rep(1, 14)
-        }
-        df1(xtab2)
-      }
-    })
-
-    observeEvent(input$area, {
-      output$areaui <- renderUI({
-        shiny::selectInput(shiny::NS(id,"areacode"), "Area",
-                           choices = unique(data()[[input$area]]))
-      })
-    })
-
-    observeEvent(input$buttonLearn, {
-      d <- data() %>%
-        dplyr::filter(.data[[input$area]] == input$areacode) %>%
-        dplyr::arrange(input$date) %>%
-        dplyr::mutate(year=as.factor(stringr::str_sub(
-          as.character(.data[[input$date]]), 1, 4))) %>%
-        dplyr::mutate(month=as.factor(
-               stringr::str_sub(as.character(.data[[input$date]]), 6, 7)))
-
-
-
-      # napocitam prumery pro jednotlive měsíce ----
-      # nejprve urcim soucty poctu pozaru podle mesice
-      roky<-names(table(d$year))
-      # roky
-      pocet.roku<-length(roky)
-      mesice<-names(table(d$month))
-      # mesice
-      pocet.mesicu<-length(mesice)
-
-      POM<-NULL
-        for (j in 1:pocet.roku) {
-          for(k in 1:pocet.mesicu){
-            POM<-rbind(POM,
-                       c(roky[j],mesice[k],
-                       sum(d[(d$year==roky[j])&(d$month==sprintf("%.2d",as.integer(mesice[k]))),input$var])))
-
+          u <- t(data()[1, c(
+            'upper99', 'upper99', 'upper95', 'upper95', 'upper90', 'upper90',
+            'upper80', 'upper80', 'lower90', 'lower90', 'lower90', 'lower90',
+            'upper95', 'upper95')])
+          l <- t(data()[1, c(
+            'upper95', 'upper95', 'upper90', 'upper90', 'upper99', 'lower99',
+            'lower80', 'lower80', 'lower80', 'lower80', 'lower95', 'lower95',
+            'lower99', 'lower99')])
+          xtab2$upper <- u
+          xtab2$lower <- l
         }
       }
-
-      # dataframe s mesicnimi soucty
-      DATA.mesicni.all<-data.frame(rok=POM[,1],
-                                   mesic=factor(POM[,2],levels=c("01","02","03","04","05","06","07","08","09","10","11","12")),
-                                   pozary=as.numeric(POM[,3]))
-
-      DATA.mesicni<-DATA.mesicni.all
-
-
-      X<-tapply(DATA.mesicni$pozary, DATA.mesicni$mesic, sum, na.rm=TRUE)
-      # X
-      # pocet pozorovani podle mesice - tedy za 15 let
-
-      N<-rep(pocet.roku,pocet.mesicu)
-
-
-      ALPHA<-switch(input$confidenceLevels,
-                    "99%" = 0.01,
-                    "95%" = 0.05,
-                    "90%" = 0.1,
-                    "80%" = 0.2)
-
-      # bootstrap
-      RES3<-NULL
-      library(boot)
-      # function to obtain the mean
-      Bmean <- function(data, indices) {
-        d <- data[indices] # allows boot to select sample
-        return(mean(d))
-      }
-
-      for (i in 1:pocet.mesicu) {
-        DAT<-DATA.mesicni[DATA.mesicni$mesic==sprintf("%.2d",i),"pozary"]
-        pom1<-boot(data=DAT, statistic=Bmean, R=1000)
-        pom2<-boot.ci(pom1,type="basic",conf = 1-ALPHA)
-        RES3<-rbind(RES3,c(pom2$t0,pom2$basic[4:5]))
-      }
-
-      colnames(RES3)<-c("lambda","CIlow","CIup")
-      # RES3
-
-      # grafy
-      DATUM<-seq(1,12)
-      RESULT3<-data.frame(DATUM,RES3)
-
-      output$plotUi <- shiny::renderUI({
-        plotly::plotlyOutput(shiny::NS(id, "plot"), width = "100%")
-      })
-
-      output$plot <- plotly::renderPlotly({
-        ggplot2::ggplot(RESULT3, ggplot2::aes(x=DATUM,y=lambda),xlim=c(1,12))+
-          ggplot2::geom_point(ggplot2::aes(x=DATUM,y=lambda))+
-          ggplot2::scale_x_continuous(breaks=seq(1, 12))+
-          ggplot2::geom_errorbar(ggplot2::aes(ymin = CIlow, ymax = CIup),width=0.2)+
-          ggplot2::labs(x = "", y = input$var)+
-          ggplot2::ggtitle(paste(input$var, input$areacode, "(Bootstrap)"))
-      })
-
-      output$fittable <- DT::renderDT({
-        DT::datatable(RESULT3, options = list(scrollX = TRUE))
-      })
+      df1(xtab2)
     })
+
   })
 }
