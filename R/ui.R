@@ -82,7 +82,7 @@ ui <- function() {
         bs4Dash::tabItem(tabName = 'tabGLModel', GLModelUi('GLModel')),
         bs4Dash::tabItem(tabName = 'tabGLMQModel', GLMQuasiModelUi('GLMQModel')),
         bs4Dash::tabItem(tabName = 'tabPAModel', PAModelUi('PAModel')),
-        bs4Dash::tabItem(tabName = 'tabARIMA', ARIMAextModelUi('ARIMA')),
+        bs4Dash::tabItem(tabName = 'tabARIMA', ARIMAModelUi('ARIMA')),
         bs4Dash::tabItem(tabName = 'tabARIMAext', ARIMAextModelUi('ARIMAext')),
         bs4Dash::tabItem(tabName = 'tabDailyPoisson', DailyPoissonUi('DailyPoisson')),
         bs4Dash::tabItem(tabName = 'tabDailyQuasiPoisson', DailyQuasiPoissonUi('DailyQuasiPoisson')),

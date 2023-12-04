@@ -9,16 +9,16 @@ PAModelUi <- function(id) {
 
 
     bs4Dash::tabBox(title = "Vytvořit model", width = 12,
-                           shiny::tabPanel('Vytvoření', shiny::uiOutput(
+                           shiny::tabPanel('Vytvoření modelu', shiny::uiOutput(
                              shiny::NS(id, "checkboxUi"))
                            ),
                            #shiny::tabPanel('Load', DT::DTOutput(
                            #   shiny::NS(id, "coltable"))
                            #),
-                           shiny::tabPanel('Přehled 1', shiny::verbatimTextOutput(
+                           shiny::tabPanel('Podrobnosti 1', shiny::verbatimTextOutput(
                              shiny::NS(id, "summary1"))
                            ),
-                           shiny::tabPanel('Přehled 2', shiny::verbatimTextOutput(
+                           shiny::tabPanel('Podrobnosti 2', shiny::verbatimTextOutput(
                              shiny::NS(id, "summary2"))
                            )),
 
