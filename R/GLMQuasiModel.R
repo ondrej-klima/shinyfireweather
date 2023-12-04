@@ -4,52 +4,63 @@
 #'
 
 GLMQuasiModelUi <- function(id) {
-  shiny::fluidRow(
+  shiny::fluidPage(
     shinybusy::add_busy_spinner(spin = "fading-circle"),
+    shiny::tags$head(
+      shiny::tags$style(shiny::HTML(".bucket-list-container {min-height: 200px;}"))
+    ),
+
+    bs4Dash::tabBox(title = "Vytvoření modelu", width = 12,
+                    shiny::tabPanel('Vytvoření modelu', shiny::uiOutput(
+                      shiny::NS(id, "checkboxUi")
+
+                    )
+                    ),
+                    #shiny::tabPanel('Load', DT::DTOutput(
+                    #   shiny::NS(id, "coltable"))
+                    #),
+                    shiny::tabPanel('Podrobnosti', shiny::verbatimTextOutput(
+                      shiny::NS(id, "summary"))
+                    ),
+                    shiny::tabPanel('ANOVA', shiny::verbatimTextOutput(
+                      shiny::NS(id, "anova"))
+                    ),
+                    shiny::tabPanel('Přesnost', htmltools::tagList(
+                      shiny::tableOutput(shiny::NS(id, 'tab')),
+                      shiny::verbatimTextOutput(shiny::NS(id, 'acc'))
+                    ))),
+
+    shiny::uiOutput(shiny::NS(id,'bucket')),
 
 
-    bs4Dash::tabBox(title = "Retrieve Model", width = 12,
-                           shiny::tabPanel('Create', shiny::uiOutput(
-                             shiny::NS(id, "checkboxUi"))
-                           ),
-                           shiny::tabPanel('Load', DT::DTOutput(
-                             shiny::NS(id, "coltable"))
-                           ),
-                           shiny::tabPanel('Summary', shiny::verbatimTextOutput(
-                             shiny::NS(id, "summary"))
-                           ),
-                           shiny::tabPanel('Anova', shiny::verbatimTextOutput(
-                             shiny::NS(id, "anova"))
-                           ),
-                           shiny::tabPanel('Accuracy', htmltools::tagList(
-                             shiny::tableOutput(shiny::NS(id, 'tab')),
-                             shiny::verbatimTextOutput(shiny::NS(id, 'acc'))
-                           ))),
-
-    bs4Dash::tabBox(title = "Plots", width = 12,
-                           shiny::tabPanel('Fit', htmltools::tagList(
-                             shiny::uiOutput(shiny::NS(id, 'fitUi'))
-                           )),
-                           shiny::tabPanel('Fit Params', htmltools::tagList(
-                             shiny::uiOutput(shiny::NS(id, 'fit'))
-                           )),
-                           shiny::tabPanel('Fit Plot', htmltools::tagList(
-                             shiny::uiOutput(shiny::NS(id, "plotUi"))
-                           )),
-                           shiny::tabPanel('Predict', htmltools::tagList(
-                             shiny::uiOutput(shiny::NS(id, 'predictUi'))
-                           )),
-                           shiny::tabPanel('Predict Params', htmltools::tagList(
-                             shiny::uiOutput(shiny::NS(id, 'predictParamsUi'))
-                           )),
-                           shiny::tabPanel('Predict Plot', htmltools::tagList(
-                             shiny::uiOutput(shiny::NS(id, 'pPlotUi'))
-                           ))
+    bs4Dash::tabBox(title = "Zobrazení dat", width = 12,
+                    shiny::tabPanel('Tabulka zdrojových dat', htmltools::tagList(
+                      shiny::uiOutput(shiny::NS(id, 'fitUi'))
+                    )),
+                    #shiny::tabPanel('Fit Params', htmltools::tagList(
+                    #  shiny::uiOutput(shiny::NS(id, 'fit'))
+                    #)),
+                    shiny::tabPanel('Graf zdrojových dat', htmltools::tagList(
+                      shiny::uiOutput(shiny::NS(id, 'fit')),
+                      shiny::uiOutput(shiny::NS(id, "plotUi"))
+                    )),
+                    shiny::tabPanel('Tabulka predikovaných dat', htmltools::tagList(
+                      shiny::uiOutput(shiny::NS(id, 'predictUi'))
+                    )),
+                    #shiny::tabPanel('Predict Params', htmltools::tagList(
+                    #   shiny::uiOutput(shiny::NS(id, 'predictParamsUi'))
+                    #)),
+                    shiny::tabPanel('Graf predikovaných dat', htmltools::tagList(
+                      shiny::uiOutput(shiny::NS(id, 'predictParamsUi')),
+                      shiny::uiOutput(shiny::NS(id, 'pPlotUi'))
+                    ))
     )
 
 
   )
+
 }
+
 
 
 #' Server for the GLModel module
@@ -66,24 +77,34 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4) {
     predCi <- reactiveVal()
 
     output$checkboxUi <- renderUI({
-      htmltools::tagList(
-        shiny::selectInput(
-          shiny::NS(id, "dataChoice"),
-          "Use Data From",
-          choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+      shiny::fluidRow(
+        column(4,
+               shiny::selectInput(
+                 shiny::NS(id, "dataChoice"),
+                 "Zdroj dat",
+                 choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+               )
         ),
-        shiny::uiOutput(NS(id, "factors")),
+        column(4,
+               shiny::uiOutput(NS(id, "factors"))
+        ),
+        column(4,
+               htmltools::tagList(
+                 htmltools::HTML("<br>"),
+                 shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Vytvořit")
+               )
+        )
       )
     })
 
     output$predictUi <- renderUI({
       htmltools::tagList(
-        shiny::selectInput(
+        shiny::column(4, shiny::selectInput(
           shiny::NS(id, "dataChoicePredict"),
-          "Use Data From",
+          "Zdroj dat",
           choices = c("Data 1", "Data 2", "Data 3", "Data 4")
-        ),
-        shiny::actionButton(shiny::NS(id, "buttonPredict"), label = "Predict"),
+        )),
+        shiny::actionButton(shiny::NS(id, "buttonPredict"), label = "Predikovat"),
         DT::DTOutput(shiny::NS(id, "dtable"))
       )
     })
@@ -122,40 +143,73 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4) {
       })
 
       output$predictParamsUi <- renderUI({
-        htmltools::tagList(
-          shiny::selectInput(shiny::NS(id, "pDate"), 'Date', colnames(data())),
-          shiny::dateRangeInput(shiny::NS(id, "pDateRange"), 'Period'),
-          shiny::selectInput(shiny::NS(id, "pArea"), 'Area Colname', colnames(data())),
-          shiny::uiOutput(shiny::NS(id, "pAreaValUi")),
-          shiny::actionButton(shiny::NS(id, "pPlotButton"), "Plot")
+        shiny::fluidPage(
+          shiny::fluidRow(
+            shiny::column(4, shiny::selectInput(shiny::NS(id, "pDate"), 'Sloupec s datumy', colnames(data()))),
+            shiny::column(4, shiny::dateRangeInput(shiny::NS(id, "pDateRange"), 'Časové rozmezí')),
+            shiny::column(4, shiny::selectInput(shiny::NS(id, "pArea"), 'Sloupec s kraji', colnames(data())))
+          ),
+          shiny::fluidRow(
+            shiny::column(4, shiny::uiOutput(shiny::NS(id, "pAreaValUi"))),
+            shiny::column(4, htmltools::tagList(
+              htmltools::HTML("&nbsp;<br />"),
+              shiny::actionButton(shiny::NS(id, "pPlotButton"), "Zobrazit graf"))
+            )
+          )
         )
+        #htmltools::tagList(
+        #  shiny::selectInput(shiny::NS(id, "pDate"), 'Date', colnames(data())),
+        #  shiny::dateRangeInput(shiny::NS(id, "pDateRange"), 'Period'),
+        #  shiny::selectInput(shiny::NS(id, "pArea"), 'Area Colname', colnames(data())),
+        #  shiny::uiOutput(shiny::NS(id, "pAreaValUi")),
+        #  shiny::actionButton(shiny::NS(id, "pPlotButton"), "Plot")
+        #)
       })
     })
 
     observeEvent(input$dataChoice, {
       data(switch(input$dataChoice,
-                 "Data 1" = data1$data(),
-                 "Data 2" = data2$data(),
-                 "Data 3" = data3$data(),
-                 "Data 4" = data4$data()))
+                  "Data 1" = data1$data(),
+                  "Data 2" = data2$data(),
+                  "Data 3" = data3$data(),
+                  "Data 4" = data4$data()))
+
+      output$bucket <- shiny::renderUI({
+        sortable::bucket_list(
+          header = "Přetáhněte názvy sloupců mezi prediktory",
+          group_name = "bucket_list_group",
+          orientation = "horizontal",
+          sortable::add_rank_list(
+            text = "Sloupce s proměnnými",
+            labels = colnames(data()
+            ),
+            input_id = shiny::NS(id,"rank_list_1")
+          ),
+          sortable::add_rank_list(
+            text = "Prediktory",
+            labels = NULL,
+            input_id = shiny::NS(id,"rank_list_2")
+          )
+        )
+      })
 
       output$factors <- renderUI({
         htmltools::tagList(
-          shiny::selectInput(shiny::NS(id,"var"), "Dependent Variable",
+          shiny::selectInput(shiny::NS(id,"var"), "Vysvětlovaná proměnná",
                              choices = colnames(data())
-          ),
-          shiny::checkboxGroupInput(shiny::NS(id,"cols"),
-                                    "Factors",
-                                    colnames(data()),
-                                    inline = TRUE),
-          shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create")
+          )
+          #shiny::checkboxGroupInput(shiny::NS(id,"cols"),
+          #                          "Factors",
+          #                          colnames(data()),
+          #                          inline = TRUE),
+
         )
       })
     })
 
     observeEvent(input$buttonLearn, {
       formula <- as.formula(
-        sprintf("%s~%s", input$var, paste(input$cols, collapse="+"))
+        sprintf("%s~%s", input$var, paste(input$rank_list_2, collapse="+"))
       )
       mod1.glm(mgcv::gam(formula, family=quasipoisson(link = "log"), data=as.data.frame(data())))
 
@@ -204,12 +258,19 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4) {
       #output$acc <- renderPrint(rcompanion::accuracy(mod1.glm()))
 
       output$fit <- renderUI({
-        htmltools::tagList(
-          shiny::selectInput(shiny::NS(id, "date"), 'Date', colnames(data())),
-          shiny::dateRangeInput(shiny::NS(id, "dateRange"), 'Period'),
-          shiny::selectInput(shiny::NS(id, "area"), 'Area Colname', colnames(data())),
-          shiny::uiOutput(shiny::NS(id, "areaValUi")),
-          shiny::actionButton(shiny::NS(id, "plotButton"), "Plot")
+        shiny::fluidPage(
+          shiny::fluidRow(
+            shiny::column(4, shiny::selectInput(shiny::NS(id, "date"), 'Sloupec s datumy', colnames(data()))),
+            shiny::column(4, shiny::dateRangeInput(shiny::NS(id, "dateRange"), 'Časové rozmezí')),
+            shiny::column(4, shiny::selectInput(shiny::NS(id, "area"), 'Sloupec s kraji', colnames(data())))
+          ),
+          shiny::fluidRow(
+            shiny::column(4, shiny::uiOutput(shiny::NS(id, "areaValUi"))),
+            shiny::column(4, htmltools::tagList(
+              htmltools::HTML("&nbsp;<br />"),
+              shiny::actionButton(shiny::NS(id, "plotButton"), "Zobrazit graf"))
+            )
+          )
         )
       })
 
@@ -224,7 +285,7 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4) {
     observeEvent(input$area, {
       output$areaValUi <- renderUI({
         shiny::selectInput(shiny::NS(id, "areaVal"),
-                           'Area Value',
+                           'Kraj',
                            unique(data()[[input$area]]))
       })
     })
@@ -232,7 +293,7 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4) {
     observeEvent(input$pArea, {
       output$pAreaValUi <- renderUI({
         shiny::selectInput(shiny::NS(id, "pAreaVal"),
-                           'Area Value',
+                           'Kraj',
                            unique(data()[[input$pArea]]))
       })
     })

@@ -285,7 +285,7 @@ GLModelServer <- function(id, data1, data2, data3, data4) {
     observeEvent(input$area, {
       output$areaValUi <- renderUI({
         shiny::selectInput(shiny::NS(id, "areaVal"),
-                           'Area Value',
+                           'Kraj',
                            unique(data()[[input$area]]))
       })
     })
@@ -293,7 +293,7 @@ GLModelServer <- function(id, data1, data2, data3, data4) {
     observeEvent(input$pArea, {
       output$pAreaValUi <- renderUI({
         shiny::selectInput(shiny::NS(id, "pAreaVal"),
-                           'Area Value',
+                           'Kraj',
                            unique(data()[[input$pArea]]))
       })
     })
