@@ -9,21 +9,13 @@ CostsEvaluationUi <- function(id) {
 
 
     bs4Dash::tabBox(title = "Retrieve Model", width = 12,
-                           shiny::tabPanel('Create', shiny::uiOutput(
-                             shiny::NS(id, "checkboxUi"))
+                           shiny::tabPanel('Create',
+                             shiny::uiOutput(shiny::NS(id, "checkboxUi")),
+                             rhandsontable::rHandsontableOutput(shiny::NS(id, "table1"))
                            ),
                            shiny::tabPanel('Load', DT::DTOutput(
                              shiny::NS(id, "coltable"))
-                           )),
-
-    bs4Dash::tabBox(title = "Plots", width = 12,
-                           shiny::tabPanel('Table', htmltools::tagList(
-                             shiny::uiOutput(shiny::NS(id, 'fitUi'))
-                           )),
-                           shiny::tabPanel('Plot', htmltools::tagList(
-                             shiny::uiOutput(shiny::NS(id, "plotUi"))
                            ))
-    )
   )
 }
 
@@ -38,6 +30,61 @@ CostsEvaluationServer <- function(id,
                                   c5, c6, c7, c8,
                                   c9, c10, c11, c12) {
   shiny::moduleServer(id, function (input, output, session) {
+    # krok 1
+    # zde je to jen o tom, aby si mohli zadat nejake rozmezi hodnot vysvetlovane
+    # promenne, ktere jsou bezne
+    uppernormval<-0
+    lowernormval<-0
+
+    # krok 2
+    # zde vychazim z tabulky, kde v prvnim sloupci je oznaceni scenare
+
+    scenario<-c(rep("výrazně pesimistický scénář",2),
+                rep("pesimistický scénář",2),
+                rep("mírně pesimistický scénář",2),
+                rep("realistický scénář",2),
+                rep("mírně optimistický scénář",2),
+                rep("optimistický scénář",2),
+                rep("mírně optimistický scénář",2))
+
+    upperb<-rep(NA,14) # zde by to chtelo nahrat horni meze jednotlivých intervalů
+    # podle výsledků predikce tak jak je popsano v cl. 14 odst. 4 a 5
+    # metodického postupu
+    lowerb<-rep(NA,14) # zde by to chtelo nahrat dolní meze jednotlivých intervalů
+    # podle výsledků predikce tak jak je popsano v cl. 14 odst. 4 a 5
+    # metodického postupu
+    prob<-rep(NA,14)
+    for (i in 1:length(prob)){
+      if (scenario[i]=="výrazně pesimistický scénář" |
+          scenario[i]=="výrazně optimistický scénář"){
+        prob[i]<-0.02
+      }
+      if (scenario[i]=="pesimistický scénář" |
+          scenario[i]=="optimistický scénář"){
+        prob[i]<-0.025
+      }
+      if (scenario[i]=="mírně pesimistický scénář" |
+          scenario[i]=="mírně optimistický scénář"){
+        prob[i]<-0.05
+      }
+      if (scenario[i]=="realistický scénář"){
+        prob[i]<-0.8
+      }
+    }
+    measure<-rep(c("Bez opatření",NA),7)
+    costs<-rep(c(0,NA),7) # prvni hodnota u kazdeho scenare by zde mela byt nulova
+    # protoze to je pripad bez opatreni
+    conseq<-rep(NA,14)
+    risk<-rep(NA,14)
+    BCR<-rep(NA,14)
+
+    scenarioTab <- scenario
+    scenarioTab[seq(7)*2]=NA
+
+    xtab <- data.frame(scenarioTab, measure, as.numeric(upperb), as.numeric(lowerb), prob)
+
+    #X<-reactiveVal(data.frame(scenarioTab,measure,as.numeric(upperb()), as.numeric(lowerb()),prob,costs,conseq,risk,BCR))
+
     data <- reactiveVal()
     predictData <- reactiveVal()
     fit1 <- reactiveVal()
@@ -47,6 +94,8 @@ CostsEvaluationServer <- function(id,
     yhat <- reactiveVal()
     fit <- reactiveVal()
     cnames <- reactiveVal()
+
+    df1 <- reactiveVal(xtab)
 
 
     output$checkboxUi <- renderUI({
@@ -59,30 +108,49 @@ CostsEvaluationServer <- function(id,
             choices = c(
               "Lineární model",
               "Poissonovský zobecněný aditivní model",
-              "Kvazi-Poissonovský zobecněný aditivní model",
-              "Poissonovský autoregresní model",
-              "Autoregresní integrovaný klouzavý průměr",
-              "Autoregresní integrovaný klouzavý průměr s externím prediktorem",
-              "Denní Poissonovské střední hodnoty",
-              "Denní kvazi-Poissonovské střední hodnoty",
-              "Denní bootstrapové střední hodnoty",
-              "Měsíční Poissonovské střední hodnoty",
-              "Měsíční Poissonovské střední hodnoty",
-              "Měsíční Poissonovské střední hodnoty"
+              "Kvazi-Poissonovský zobecněný aditivní model"
+
+            #  "Poissonovský autoregresní model",
+            #  "Autoregresní integrovaný klouzavý průměr",
+            #  "Autoregresní integrovaný klouzavý průměr s externím prediktorem",
+            #  "Denní Poissonovské střední hodnoty",
+            #  "Denní kvazi-Poissonovské střední hodnoty",
+            #  "Denní bootstrapové střední hodnoty",
+            #  "Měsíční Poissonovské střední hodnoty",
+            #  "Měsíční Poissonovské střední hodnoty",
+            #  "Měsíční Poissonovské střední hodnoty"
             ),
-            size=12,
+            size=3,
             selectize=FALSE
           ))),
         shiny::column(6,
           shiny::fluidRow(
-            shiny::column(6, shiny::uiOutput(NS(id, "varUi"))),
-            shiny::column(6, shiny::uiOutput(shiny::NS(id, 'dateUi'))),
-            shiny::column(6, shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create"))
+            #shiny::column(6, shiny::uiOutput(NS(id, "lowUi"))),
+            #shiny::column(6, shiny::uiOutput(shiny::NS(id, 'highUi'))),
+            shiny::column(6, shiny::numericInput(shiny::NS(id, "low"), "Low value", 0)),
+            shiny::column(6, shiny::numericInput(shiny::NS(id, 'high'), "High value", 100)),
+            #shiny::column(6, shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create"))
             )
-
         )
       )
     })
+
+    output$table1 <- rhandsontable::renderRHandsontable(
+      rhandsontable::rhandsontable(
+        data = df1(),
+        rowHeaders = TRUE,
+        contextMenu = FALSE,
+        stretchH = "all",
+        width = '100%',
+        height = 800,
+        colWidths = c(100, 250, 50, 50, 50),
+        colHeaders = c("Scénář", "Opatření", "Horní hranice", "Dolní hranice", "Pravděpodobnost"),
+        manualColumnResize = TRUE,
+        manualRowResize = TRUE,
+      ) %>%
+        rhandsontable::hot_rows(rowHeights = 50)
+      )
+
 
     output$fitUi <- renderUI({
       htmltools::tagList(
@@ -92,41 +160,32 @@ CostsEvaluationServer <- function(id,
 
     observeEvent(input$dataChoice, {
 
-        data(shiny::isolate({switch(input$dataChoice,
-                   "Lineární model" = c1$data(),
-                   "Poissonovský zobecněný aditivní model" = c2$data(),
-                   "Kvazi-Poissonovský zobecněný aditivní model" = c3$data(),
-                   "Poissonovský autoregresní model" = c4$data(),
-                   "Autoregresní integrovaný klouzavý průměr" = c5$data(),
-                   "Autoregresní integrovaný klouzavý průměr s externím prediktorem" = c6$data(),
-                   "Denní Poissonovské střední hodnoty" = c7$data(),
-                   "Denní kvazi-Poissonovské střední hodnoty" = c8$data(),
-                   "Denní bootstrapové střední hodnoty" = c9$data(),
-                   "Měsíční Poissonovské střední hodnoty" = c10$data(),
-                   "Měsíční Poissonovské střední hodnoty" = c11$data(),
-                   "Měsíční Poissonovské střední hodnoty" = c12$data()
-                   )}))
+      data(switch(input$dataChoice,
+                 "Lineární model" = c1$data(),
+                 "Poissonovský zobecněný aditivní model" = c2$data(),
+                 "Kvazi-Poissonovský zobecněný aditivní model" = c3$data()))
 
-      output$varUi <- shiny::renderUI(
-        shiny::selectInput(
-          shiny::NS(id,"var"), "Dependent Variable",
-          choices = colnames(data())
-        )
-      )
+    #             "Poissonovský autoregresní model" = c4$data(),
+    #             "Autoregresní integrovaný klouzavý průměr" = c5$data(),
+    #             "Autoregresní integrovaný klouzavý průměr s externím prediktorem" = c6$data(),
+    #             "Denní Poissonovské střední hodnoty" = c7$data(),
+    #             "Denní kvazi-Poissonovské střední hodnoty" = c8$data(),
+    #             "Denní bootstrapové střední hodnoty" = c9$data(),
+    #             "Měsíční Poissonovské střední hodnoty" = c10$data(),
+    #             "Měsíční Poissonovské střední hodnoty" = c11$data(),
+    #             "Měsíční Poissonovské střední hodnoty" = c12$data()
+    #             )}))
 
-      output$dateUi <- shiny::renderUI(
-        shiny::selectInput(
-          shiny::NS(id,"date"), "Date Colname",
-          choices = colnames(data())
-        )
-      )
 
-      output$areaColUi <- shiny::renderUI(
-        shiny::selectInput(
-          shiny::NS(id,"area"), "Area Colname",
-          choices = colnames(data())
-        )
-      )
+      xtab2 <- xtab
+      if(!is.null(data())) {
+        d <- data() %>% dplyr::pull()
+
+        if(length(d) > 0) {
+          xtab2[,3] <- rep(1, 14)
+        }
+        df1(xtab2)
+      }
     })
 
     observeEvent(input$area, {
