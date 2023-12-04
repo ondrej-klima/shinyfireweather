@@ -8,31 +8,31 @@ PAModelUi <- function(id) {
     shinybusy::add_busy_spinner(spin = "fading-circle"),
 
 
-    bs4Dash::tabBox(title = "Retrieve Model", width = 12,
-                           shiny::tabPanel('Create', shiny::uiOutput(
+    bs4Dash::tabBox(title = "Vytvořit model", width = 12,
+                           shiny::tabPanel('Vytvoření', shiny::uiOutput(
                              shiny::NS(id, "checkboxUi"))
                            ),
-                           shiny::tabPanel('Load', DT::DTOutput(
-                             shiny::NS(id, "coltable"))
-                           ),
-                           shiny::tabPanel('Summary 1', shiny::verbatimTextOutput(
+                           #shiny::tabPanel('Load', DT::DTOutput(
+                           #   shiny::NS(id, "coltable"))
+                           #),
+                           shiny::tabPanel('Přehled 1', shiny::verbatimTextOutput(
                              shiny::NS(id, "summary1"))
                            ),
-                           shiny::tabPanel('Summary 2', shiny::verbatimTextOutput(
+                           shiny::tabPanel('Přehled 2', shiny::verbatimTextOutput(
                              shiny::NS(id, "summary2"))
                            )),
 
-    bs4Dash::tabBox(title = "Plots", width = 12,
-                           shiny::tabPanel('Fit', htmltools::tagList(
+    bs4Dash::tabBox(title = "Zobrazení dat", width = 12,
+                           shiny::tabPanel('Tabulka zdrojových dat', htmltools::tagList(
                              shiny::uiOutput(shiny::NS(id, 'fitUi'))
                            )),
-                           shiny::tabPanel('Fit Plot', htmltools::tagList(
+                           shiny::tabPanel('Graf zdrojových dat', htmltools::tagList(
                              shiny::uiOutput(shiny::NS(id, "plotUi"))
                            )),
-                           shiny::tabPanel('Predict', htmltools::tagList(
+                           shiny::tabPanel('Tabulka predikovaných dat', htmltools::tagList(
                              shiny::uiOutput(shiny::NS(id, 'predictUi'))
                            )),
-                           shiny::tabPanel('Predict Plot', htmltools::tagList(
+                           shiny::tabPanel('Graf predikovaných dat', htmltools::tagList(
                              shiny::uiOutput(shiny::NS(id, 'pPlotUi'))
                            ))
     )
@@ -58,13 +58,18 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
 
 
     output$checkboxUi <- renderUI({
-      htmltools::tagList(
-        shiny::selectInput(
-          shiny::NS(id, "dataChoice"),
-          "Use Data From",
-          choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+      shiny::fluidPage(
+        shiny::fluidRow(
+          shiny::column(4,
+            shiny::selectInput(
+              shiny::NS(id, "dataChoice"),
+              "Zdroj dat",
+             choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+            )),
+          shiny::column(4, shiny::uiOutput(NS(id, "factors1a"))),
+          shiny::column(4, shiny::uiOutput(NS(id, "factors1b")))
         ),
-        shiny::uiOutput(NS(id, "factors")),
+        shiny::uiOutput(NS(id, "factors2"))
       )
     })
 
@@ -87,22 +92,32 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
                  "Data 3" = data3$data(),
                  "Data 4" = data4$data()))
 
-      output$factors <- renderUI({
-        htmltools::tagList(
-          shiny::selectInput(shiny::NS(id,"var"), "Dependent Variable",
-                             choices = colnames(data())),
-          shiny::selectInput(shiny::NS(id,"date"), "Date Colname",
-                             choices = colnames(data())),
-          shiny::selectInput(shiny::NS(id,"area"), "Area Colname",
-                             choices = colnames(data())),
-          shiny::uiOutput(shiny::NS(id, 'areaui')),
+      output$factors1a <- renderUI({
+        shiny::selectInput(shiny::NS(id,"var"), "Vysvětlovaná proměnná",
+                         choices = colnames(data()))
+        })
+
+      output$factors1b <- renderUI({
+        shiny::selectInput(shiny::NS(id,"date"), "Sloupec s datumy",
+                         choices = colnames(data()))
+      })
+
+      output$factors2 <-renderUI({
+        shiny::fluidRow(
+          shiny::column(4,
+          shiny::selectInput(shiny::NS(id,"area"), "Sloupec s kraji",
+                             choices = colnames(data()))),
+          shiny::column(4,
+          shiny::uiOutput(shiny::NS(id, 'areaui'))),
+          shiny::column(4,
           shiny::selectInput(
             shiny::NS(id, "confidenceLevels"),
-            "Confidence Levels",
+            "Intervaly spolehlivosti",
             choices = c("99%", "95%", "90%", "80%"),
             selected = "95%"
-          ),
-          shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create")
+          )),
+          shiny::column(4,
+          shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Vytvořit"))
         )
       })
 
@@ -110,7 +125,7 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
 
     observeEvent(input$area, {
       output$areaui <- renderUI({
-        shiny::selectInput(shiny::NS(id,"areacode"), "Area",
+        shiny::selectInput(shiny::NS(id,"areacode"), "Kraj",
                            choices = unique(data()[[input$area]]))
       })
     })
