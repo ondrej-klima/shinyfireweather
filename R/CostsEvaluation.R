@@ -17,7 +17,7 @@ CostsEvaluationUi <- function(id) {
                              shiny::actionButton(shiny::NS(id, "buttonLoad1"), "Načíst opatření"),
                              rhandsontable::rHandsontableOutput(shiny::NS(id, "table2"))
                            ),
-                           shiny::tabPanel('Kvalitativní analýza',
+                           shiny::tabPanel('Semikvantitavní analýza',
                              shiny::actionButton(shiny::NS(id, "buttonLoad2"), "Načíst opatření"),
                              rhandsontable::rHandsontableOutput(shiny::NS(id, "table3"))
                           ))
@@ -231,8 +231,49 @@ CostsEvaluationServer <- function(id,
 
     })
 
+    observeEvent(input$table3, {
+      X<-df1()
+      i <- which(X[,"upperb"]>input$uppernormval | X[,"lowerb"]<input$lowernormval)
+
+      #print('jdu tu')
+
+      df = rhandsontable::hot_to_r(input$table3)
+
+      if(dim(df)[1] > 1) {
+        X <- cbind(df, 'scenario' =  scenario[i])# sem pripojit scenarion, BCR
+
+        X[,"RPN"]<-X[,"prob"]*10^X[,"conseq"]
+        for (i in 1:dim(X)[1]){
+          X[i,"BCR"]<-(X[i,"RPN"]-X[which(X[,"scenario"]==X[i,"scenario"])[1],"RPN"])/
+            10^X[i,"costs"]
+        }
+        #X[,"RPN"]<-X[,"prob"]*X[,"conseq"]
+        #for (i in 1:dim(X)[1]){
+        #  X[i,"BCR"]<-(X[i,"RPN"]-X[which(X[,"scenario"]==X[i,"scenario"])[1],"RPN"])/
+        #    X[i,"costs"]
+        #}
+
+        X[seq(1,length(i),2), "BCR"] <- NA
+        df3(X %>% dplyr::select(-scenario))
+      }
+
+    })
+
     observeEvent(input$buttonLoad2, {
-      df3(isolate(df1()))
+      df3(isolate(cbind(df1(),
+                        "costs" = as.numeric(rep(NA, 14)),
+                        "conseq" = as.numeric(rep(NA, 14)),
+                        "RPN" = rep(0, 14),
+                        "BCR" = rep(0, 14))))
+
+      X<-df3()
+      u <- input$uppernormval
+      l <- input$lowernormval
+      i <- which(X[,"upperb"]>u | X[,"lowerb"]<l)
+      Y <- X[i,]
+      df3(Y)
+      #browser()
+
       output$table3 <- rhandsontable::renderRHandsontable(
         rhandsontable::rhandsontable(
           data = df3(),
@@ -241,12 +282,21 @@ CostsEvaluationServer <- function(id,
           stretchH = "all",
           width = '100%',
           height = 800,
-          colWidths = c(100, 250, 50, 50, 50),
-          colHeaders = c("Scénář", "Opatření", "Horní hranice", "Dolní hranice", "Pravděpodobnost"),
+          colWidths = c(100, 250, 50, 50, 50, 50, 50, 50, 50),
+          colHeaders = c("Scénář", "Opatření", "Horní hranice", "Dolní hranice",
+                         "Pravděpodobnost", 'Náklady na realizaci opatření',
+                         'Očekávaná škoda', 'RPN', 'BCR'),
           manualColumnResize = TRUE,
           manualRowResize = TRUE,
         ) %>%
-          rhandsontable::hot_rows(rowHeights = 50)
+          rhandsontable::hot_rows(rowHeights = 50) %>%
+          rhandsontable::hot_col(1, readOnly = T) %>%
+          rhandsontable::hot_col(2, readOnly = T) %>%
+          rhandsontable::hot_col(3, readOnly = T) %>%
+          rhandsontable::hot_col(4, readOnly = T) %>%
+          rhandsontable::hot_col(5, readOnly = T) %>%
+          rhandsontable::hot_col("RPN", readOnly = T) %>%
+          rhandsontable::hot_col("BCR", readOnly = T)
       )
     })
 
