@@ -14,10 +14,12 @@ CostsEvaluationUi <- function(id) {
                              rhandsontable::rHandsontableOutput(shiny::NS(id, "table1"))
                            ),
                            shiny::tabPanel('Kvantitativní analýza',
+                             shiny::actionButton(shiny::NS(id, "buttonLoad1"), "Načíst opatření"),
                              rhandsontable::rHandsontableOutput(shiny::NS(id, "table2"))
                            ),
                            shiny::tabPanel('Kvalitativní analýza',
-                            rhandsontable::rHandsontableOutput(shiny::NS(id, "table3"))
+                             shiny::actionButton(shiny::NS(id, "buttonLoad2"), "Načíst opatření"),
+                             rhandsontable::rHandsontableOutput(shiny::NS(id, "table3"))
                           ))
   )
 }
@@ -84,7 +86,7 @@ CostsEvaluationServer <- function(id,
     scenarioTab <- scenario
     scenarioTab[seq(7)*2]=NA
 
-    xtab <- data.frame(scenarioTab, measure, upper=as.numeric(upperb), lower=as.numeric(lowerb), prob)
+    xtab <- data.frame(scenarioTab, measure, upperb=as.numeric(upperb), lowerb=as.numeric(lowerb), prob=as.numeric(prob))
 
     #X<-reactiveVal(data.frame(scenarioTab,measure,as.numeric(upperb()), as.numeric(lowerb()),prob,costs,conseq,risk,BCR))
 
@@ -99,6 +101,8 @@ CostsEvaluationServer <- function(id,
     cnames <- reactiveVal()
 
     df1 <- reactiveVal(xtab)
+    df2 <- reactiveVal()
+    df3 <- reactiveVal()
 
 
     output$checkboxUi <- renderUI({
@@ -130,8 +134,8 @@ CostsEvaluationServer <- function(id,
           shiny::fluidRow(
             #shiny::column(6, shiny::uiOutput(NS(id, "lowUi"))),
             #shiny::column(6, shiny::uiOutput(shiny::NS(id, 'highUi'))),
-            shiny::column(6, shiny::numericInput(shiny::NS(id, "low"), "Spodní hranice", 0)),
-            shiny::column(6, shiny::numericInput(shiny::NS(id, 'high'), "Horní hranice", 100)),
+            shiny::column(6, shiny::numericInput(shiny::NS(id, "lowernormval"), "Spodní hranice", 0)),
+            shiny::column(6, shiny::numericInput(shiny::NS(id, 'uppernormval'), "Horní hranice", 100)),
             #shiny::column(6, shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create"))
             )
         )
@@ -151,40 +155,100 @@ CostsEvaluationServer <- function(id,
         manualColumnResize = TRUE,
         manualRowResize = TRUE,
       ) %>%
-        rhandsontable::hot_rows(rowHeights = 50)
+        rhandsontable::hot_rows(rowHeights = 50) %>%
+        rhandsontable::hot_col(c(1,3,4,5), readOnly = T) %>%
+        rhandsontable::hot_row(seq(1,14,2), readOnly = T)
       )
 
-    output$table2 <- rhandsontable::renderRHandsontable(
-      rhandsontable::rhandsontable(
-        data = df1(),
-        rowHeaders = TRUE,
-        contextMenu = FALSE,
-        stretchH = "all",
-        width = '100%',
-        height = 800,
-        colWidths = c(100, 250, 50, 50, 50),
-        colHeaders = c("Scénář", "Opatření", "Horní hranice", "Dolní hranice", "Pravděpodobnost"),
-        manualColumnResize = TRUE,
-        manualRowResize = TRUE,
-      ) %>%
-        rhandsontable::hot_rows(rowHeights = 50)
-    )
+    observeEvent(input$table1, {
+      df = rhandsontable::hot_to_r(input$table1)
+      df1(df)
+    })
 
-    output$table3 <- rhandsontable::renderRHandsontable(
-      rhandsontable::rhandsontable(
-        data = df1(),
-        rowHeaders = TRUE,
-        contextMenu = FALSE,
-        stretchH = "all",
-        width = '100%',
-        height = 800,
-        colWidths = c(100, 250, 50, 50, 50),
-        colHeaders = c("Scénář", "Opatření", "Horní hranice", "Dolní hranice", "Pravděpodobnost"),
-        manualColumnResize = TRUE,
-        manualRowResize = TRUE,
-      ) %>%
-        rhandsontable::hot_rows(rowHeights = 50)
-    )
+    observeEvent(input$buttonLoad1, {
+      df2(isolate(cbind(df1(),
+                        "costs" = as.numeric(rep(NA, 14)),
+                        "conseq" = as.numeric(rep(NA, 14)),
+                        "EL" = rep(0, 14),
+                        "BCR" = rep(0, 14))))
+
+      X<-df2()
+      u <- input$uppernormval
+      l <- input$lowernormval
+      i <- which(X[,"upperb"]>u | X[,"lowerb"]<l)
+      Y <- X[i,]
+      df2(Y)
+      #browser()
+
+      output$table2 <- rhandsontable::renderRHandsontable(
+        rhandsontable::rhandsontable(
+          data = df2(),
+          rowHeaders = TRUE,
+          contextMenu = FALSE,
+          stretchH = "all",
+          width = '100%',
+          height = 800,
+          colWidths = c(100, 250, 50, 50, 50, 50, 50, 50, 50),
+          colHeaders = c("Scénář", "Opatření", "Horní hranice", "Dolní hranice",
+                         "Pravděpodobnost", 'Náklady na realizaci opatření',
+                         'Očekávaná škoda', 'EL', 'BCR'),
+          manualColumnResize = TRUE,
+          manualRowResize = TRUE,
+        ) %>%
+          rhandsontable::hot_rows(rowHeights = 50) %>%
+          rhandsontable::hot_col(1, readOnly = T) %>%
+          rhandsontable::hot_col(2, readOnly = T) %>%
+          rhandsontable::hot_col(3, readOnly = T) %>%
+          rhandsontable::hot_col(4, readOnly = T) %>%
+          rhandsontable::hot_col(5, readOnly = T) %>%
+          rhandsontable::hot_col("EL", readOnly = T) %>%
+          rhandsontable::hot_col("BCR", readOnly = T)
+      )
+      # https://github.com/jrowen/rhandsontable/issues/116
+      # https://stackoverflow.com/questions/39752455/changing-background-color-of-several-rows-in-rhandsontable
+    })
+
+    observeEvent(input$table2, {
+        X<-df1()
+        i <- which(X[,"upperb"]>input$uppernormval | X[,"lowerb"]<input$lowernormval)
+
+        #print('jdu tu')
+
+        df = rhandsontable::hot_to_r(input$table2)
+
+        if(dim(df)[1] > 1) {
+          X <- cbind(df, 'scenario' =  scenario[i])# sem pripojit scenarion, BCR
+
+          X[,"EL"]<-X[,"prob"]*X[,"conseq"]
+          for (i in 1:dim(X)[1]){
+            X[i,"BCR"]<-(X[i,"EL"]-X[which(X[,"scenario"]==X[i,"scenario"])[1],"EL"])/
+              X[i,"costs"]
+          }
+
+          X[seq(1,length(i),2), "BCR"] <- NA
+          df2(X %>% dplyr::select(-scenario))
+        }
+
+    })
+
+    observeEvent(input$buttonLoad2, {
+      df3(isolate(df1()))
+      output$table3 <- rhandsontable::renderRHandsontable(
+        rhandsontable::rhandsontable(
+          data = df3(),
+          rowHeaders = TRUE,
+          contextMenu = FALSE,
+          stretchH = "all",
+          width = '100%',
+          height = 800,
+          colWidths = c(100, 250, 50, 50, 50),
+          colHeaders = c("Scénář", "Opatření", "Horní hranice", "Dolní hranice", "Pravděpodobnost"),
+          manualColumnResize = TRUE,
+          manualRowResize = TRUE,
+        ) %>%
+          rhandsontable::hot_rows(rowHeights = 50)
+      )
+    })
 
     output$fitUi <- renderUI({
       htmltools::tagList(
@@ -211,25 +275,26 @@ CostsEvaluationServer <- function(id,
     #             )}))
 
 
-      xtab2 <- xtab
-      xtab2$upper <- rep(as.numeric(NA), 14)
-      xtab2$lower <- rep(as.numeric(NA), 14)
+      xtab2 <- df1()
+      xtab2$upperb <- rep(as.numeric(NA), 14)
+      xtab2$lowerb <- rep(as.numeric(NA), 14)
       if(!is.null(data())) {
         d <- data() %>% dplyr::pull()
 
         if(length(d) > 0) {
           u <- t(data()[1, c(
             'upper99', 'upper99', 'upper95', 'upper95', 'upper90', 'upper90',
-            'upper80', 'upper80', 'lower90', 'lower90', 'lower90', 'lower90',
-            'upper95', 'upper95')])
+            'upper80', 'upper80', 'lower80', 'lower80', 'lower90', 'lower90',
+            'lower95', 'lower95')])
           l <- t(data()[1, c(
-            'upper95', 'upper95', 'upper90', 'upper90', 'upper99', 'lower99',
-            'lower80', 'lower80', 'lower80', 'lower80', 'lower95', 'lower95',
+            'upper95', 'upper95', 'upper90', 'upper90', 'upper80', 'upper80',
+            'lower80', 'lower80', 'lower90', 'lower90', 'lower95', 'lower95',
             'lower99', 'lower99')])
-          xtab2$upper <- u
-          xtab2$lower <- l
+          xtab2$upperb <- as.numeric(u)
+          xtab2$lowerb <- as.numeric(l)
         }
       }
+      #browser()
       df1(xtab2)
     })
 
