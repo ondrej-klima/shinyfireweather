@@ -47,6 +47,7 @@ ManualDataServer <- function(id,
                            data3 = NULL,
                            data4 = NULL) {
   shiny::moduleServer(id, function (input, output, session) {
+    data <- reactiveVal()
     observeEvent(input$load, {
       df <- switch(input$data,
                "Data 1" = data1$data(),
@@ -72,6 +73,10 @@ ManualDataServer <- function(id,
           )
         })
       }
+    })
+
+    observeEvent(input$table, {
+      data(rhandsontable::hot_to_r(input$table))
     })
 
     return(

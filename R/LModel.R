@@ -67,7 +67,7 @@ LModelUi <- function(id) {
 #' This function provides server for the data edit table.
 #' @importFrom magrittr "%>%"
 #'
-LModelServer <- function(id, data1, data2, data3, data4) {
+LModelServer <- function(id, data1, data2, data3, data4, data5) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- reactiveVal()
     predictData <- reactiveVal()
@@ -101,7 +101,7 @@ LModelServer <- function(id, data1, data2, data3, data4) {
         shiny::column(4, shiny::selectInput(
           shiny::NS(id, "dataChoicePredict"),
           "Zdroj dat",
-          choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+          choices = c("Data 1", "Data 2", "Data 3", "Data 4", "Manuálně zadaná data")
         )),
         shiny::actionButton(shiny::NS(id, "buttonPredict"), label = "Predikovat"),
         DT::DTOutput(shiny::NS(id, "dtable"))
@@ -119,7 +119,8 @@ LModelServer <- function(id, data1, data2, data3, data4) {
                   "Data 1" = data1$data(),
                   "Data 2" = data2$data(),
                   "Data 3" = data3$data(),
-                  "Data 4" = data4$data()))
+                  "Data 4" = data4$data(),
+                  "Manuálně zadaná data" = data5$data()))
       pred <- predict(mod1.glm(),
                       newdata=as.data.frame(predictData()),
       #                type="response",
