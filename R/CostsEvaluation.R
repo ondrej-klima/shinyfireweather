@@ -35,6 +35,23 @@ CostsEvaluationServer <- function(id,
                                   c5, c6, c7, c8,
                                   c9, c10, c11, c12) {
   shiny::moduleServer(id, function (input, output, session) {
+    labelsCosts <- c(
+     '0: Náklady do 1 mil. Kč za zvolenou jednotku času',
+     '1: Náklady do 10 mil. Kč. za zvolenou jednotku času',
+     '2: Náklady od 10 mil. Kč do 100 mil. Kč. za zvolenou jednotku času',
+     '3: Náklady od 100 mil. Kč do 1 mld. Kč. za zvolenou jednotku času',
+     '4: Náklady od 1 mld. Kč do 10 mld. Kč. za zvolenou jednotku času',
+     '5: Náklady vyšší než 10 mld. Kč. za zvolenou jednotku času')
+
+    labelsConseq <- c(
+      '0: Zanedbatelné, např. materiální škody menší než 1 mil. Kč bez ohrožení života a zdraví osob.',
+      '1: Velmi nízké negativní dopady, např. materiální škody od 1 mil. Kč do 10 mil. Kč, bez ohrožení života a zdraví jednotlivců.',
+      '2: Nízké negativní dopady, např. materiální škody od 10 mil. Kč do 100 mil. Kč,  ohrožení života a zdraví jednotlivců',
+      '3: Střední negativní dopady, např. materiální škody od 100 mil. Kč do 1 mld. Kč, ohrožení života a zdraví desítek osob.',
+      '4: Závažné negativní dopady, např. materiální škody od 1 mld. Kč do 10 mld. Kč, ohrožení života a zdraví stovek osob.',
+      '5: Velmi závažné negativní dopady, např. materiální škody od 10 mld. Kč do 100 mld. Kč, ohrožení života a zdraví tisíců osob.'
+    )
+
     # krok 1
     # zde je to jen o tom, aby si mohli zadat nejake rozmezi hodnot vysvetlovane
     # promenne, ktere jsou bezne
@@ -113,6 +130,7 @@ CostsEvaluationServer <- function(id,
             shiny::NS(id, "dataChoice"),
             "Použít výsledky následujícího modelu",
             choices = c(
+              "",
               "Lineární model",
               "Poissonovský zobecněný aditivní model",
               "Kvazi-Poissonovský zobecněný aditivní model"
@@ -126,9 +144,9 @@ CostsEvaluationServer <- function(id,
             #  "Měsíční Poissonovské střední hodnoty",
             #  "Měsíční Poissonovské střední hodnoty",
             #  "Měsíční Poissonovské střední hodnoty"
-            ),
-            size=3,
-            selectize=FALSE
+            )#,
+            #size=3,
+            #selectize=FALSE
           ))),
         shiny::column(6,
           shiny::fluidRow(
@@ -225,7 +243,7 @@ CostsEvaluationServer <- function(id,
               X[i,"costs"]
           }
 
-          X[seq(1,length(i),2), "BCR"] <- NA
+          X[seq(1,dim(X)[1],2), "BCR"] <- NA
           df2(X %>% dplyr::select(-scenario))
         }
 
@@ -242,10 +260,14 @@ CostsEvaluationServer <- function(id,
       if(dim(df)[1] > 1) {
         X <- cbind(df, 'scenario' =  scenario[i])# sem pripojit scenarion, BCR
 
-        X[,"RPN"]<-X[,"prob"]*10^X[,"conseq"]
+        X2 <- X
+        X2[,'conseq'] <- as.integer(X[,'conseq']) - 1
+        X2[,'costs'] <- as.integer(X[,'costs']) - 1
+
+        X[,"RPN"]<-X[,"prob"]*10^X2[,"conseq"]
         for (i in 1:dim(X)[1]){
           X[i,"BCR"]<-(X[i,"RPN"]-X[which(X[,"scenario"]==X[i,"scenario"])[1],"RPN"])/
-            10^X[i,"costs"]
+            10^X2[i,"costs"]
         }
         #X[,"RPN"]<-X[,"prob"]*X[,"conseq"]
         #for (i in 1:dim(X)[1]){
@@ -253,7 +275,7 @@ CostsEvaluationServer <- function(id,
         #    X[i,"costs"]
         #}
 
-        X[seq(1,length(i),2), "BCR"] <- NA
+        X[seq(1,dim(X)[1],2), "BCR"] <- NA
         df3(X %>% dplyr::select(-scenario))
       }
 
@@ -261,8 +283,8 @@ CostsEvaluationServer <- function(id,
 
     observeEvent(input$buttonLoad2, {
       df3(isolate(cbind(df1(),
-                        "costs" = as.numeric(rep(NA, 14)),
-                        "conseq" = as.numeric(rep(NA, 14)),
+                        "costs" = factor(rep(NA, 14), levels = labelsCosts),
+                        "conseq" = factor(rep(NA, 14), levels = labelsConseq),
                         "RPN" = rep(0, 14),
                         "BCR" = rep(0, 14))))
 
@@ -308,6 +330,8 @@ CostsEvaluationServer <- function(id,
 
     observeEvent(input$dataChoice, {
 
+      if(input$dataChoice != "") {
+
       data(switch(input$dataChoice,
                  "Lineární model" = c1$data(),
                  "Poissonovský zobecněný aditivní model" = c2$data(),
@@ -346,6 +370,7 @@ CostsEvaluationServer <- function(id,
       }
       #browser()
       df1(xtab2)
+      }
     })
 
   })
