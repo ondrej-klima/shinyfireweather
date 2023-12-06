@@ -3,7 +3,7 @@
 #' This function provides UI for the data edit table.
 #'
 editDataUi <- function(id) {
-  shiny::fluidRow(
+  shiny::fluidPage(
     shinybusy::add_busy_spinner(spin = "fading-circle"),
 
     shiny::fluidRow(

@@ -24,7 +24,10 @@ ui <- function() {
                              icon = shiny::icon("table")),
            bs4Dash::menuSubItem("Data 4",
                              tabName = "tabData4",
-                             icon = shiny::icon("table"))
+                             icon = shiny::icon("table")),
+           bs4Dash::menuSubItem("Manuální zadání",
+                                tabName = "tabManual",
+                                icon = shiny::icon("table"))
         ),
         bs4Dash::menuItem("Model",
                                  icon = shiny::icon("chart-line"),
@@ -91,7 +94,8 @@ ui <- function() {
         bs4Dash::tabItem(tabName = 'tabMonthlyQuasiPoisson', MonthlyQuasiPoissonUi('MonthlyQuasiPoisson')),
         bs4Dash::tabItem(tabName = 'tabMonthlyBootstrap', MonthlyBootstrapUi('MonthlyBootstrap')),
         bs4Dash::tabItem(tabName = 'tabCostsEvaluation', CostsEvaluationUi('CostsEvaluation')),
-        bs4Dash::tabItem(tabName = 'tabMap', leaflet::leafletOutput('map')
+        bs4Dash::tabItem(tabName = 'tabManual', ManualDataUi('manualData')
+        #bs4Dash::tabItem(tabName = 'tabMap', leaflet::leafletOutput('map')
         )
       )
     )

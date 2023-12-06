@@ -28,6 +28,13 @@ server <- function(input, output, session) {
                             data2 = data2,
                             data3 = data3,
                             data4 = data4)
+  data5 <- ManualDataServer('manualData',
+                            data1 = data1,
+                            data2 = data2,
+                            data3 = data3,
+                            data4 = data4)
+
+
 
   c1 <- LModelServer('LModel', data1, data2, data3, data4)
   c2 <- GLModelServer('GLModel', data1, data2, data3, data4)

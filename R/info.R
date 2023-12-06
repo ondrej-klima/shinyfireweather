@@ -28,7 +28,7 @@ infoUi <- function(id) {
                                  shiny::column(3, 'Dostupnost dat'),
                                  shiny::column(6,
                                    shinyWidgets::sliderTextInput(
-                                    inputId = NS(id, "slider1"),
+                                    inputId = shiny::NS(id, "slider1"),
                                     label = NULL,
                                     grid = TRUE,
                                     force_edges = TRUE,
@@ -42,7 +42,7 @@ infoUi <- function(id) {
                                shiny::column(3, 'Dostupnost dat'),
                                shiny::column(6,
                                              shinyWidgets::sliderTextInput(
-                                               inputId = NS(id, "slider2"),
+                                               inputId = shiny::NS(id, "slider2"),
                                                label = NULL,
                                                grid = TRUE,
                                                force_edges = TRUE,
@@ -56,7 +56,7 @@ infoUi <- function(id) {
                                shiny::column(3, 'Dostupnost dat'),
                                shiny::column(6,
                                              shinyWidgets::sliderTextInput(
-                                               inputId = NS(id, "slider3"),
+                                               inputId = shiny::NS(id, "slider3"),
                                                label = NULL,
                                                grid = TRUE,
                                                force_edges = TRUE,
@@ -70,7 +70,7 @@ infoUi <- function(id) {
                                 shiny::column(3, 'Věrohodnost dostupných dat'),
                                 shiny::column(6,
                                               shinyWidgets::sliderTextInput(
-                                                inputId = NS(id, "slider4"),
+                                                inputId = shiny::NS(id, "slider4"),
                                                 label = NULL,
                                                 grid = TRUE,
                                                 force_edges = TRUE,
@@ -84,7 +84,7 @@ infoUi <- function(id) {
                                 shiny::column(3, 'Věrohodnost dostupných dat'),
                                 shiny::column(6,
                                               shinyWidgets::sliderTextInput(
-                                                inputId = NS(id, "slider5"),
+                                                inputId = shiny::NS(id, "slider5"),
                                                 label = NULL,
                                                 grid = TRUE,
                                                 force_edges = TRUE,
@@ -99,7 +99,7 @@ infoUi <- function(id) {
                                shiny::column(3, 'Aktuálnost dostupných dat'),
                                shiny::column(6,
                                              shinyWidgets::sliderTextInput(
-                                               inputId = NS(id, "slider6"),
+                                               inputId = shiny::NS(id, "slider6"),
                                                label = NULL,
                                                grid = TRUE,
                                                force_edges = TRUE,
