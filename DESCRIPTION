@@ -34,7 +34,8 @@ Imports:
     bs4Dash,
     sortable,
     DescTools,
-    boot
+    boot,
+    shinyWidgets
 Depends: 
     R (>= 2.10)
 LazyData: true
