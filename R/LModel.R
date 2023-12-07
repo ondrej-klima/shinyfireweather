@@ -89,7 +89,35 @@ LModelUi <- function(id) {
                            shiny::tabPanel('Graf predikovaných dat', htmltools::tagList(
                              shiny::uiOutput(shiny::NS(id, 'predictParamsUi')),
                              shiny::uiOutput(shiny::NS(id, 'pPlotUi'))
-                           ))
+                           )),
+                    shiny::tabPanel('Zpětné ověření predikce',
+                                    shiny::fluidPage(
+                                      shiny::fluidRow(
+                                        shiny::column(4,
+                                                      shiny::HTML("&nbsp;<br />"),
+                                                      shiny::actionButton(
+                                                        shiny::NS(id, 'pbuttonValidate'),
+                                                        label = 'Ověřit')
+                                        )
+                                      ),
+                                      shiny::fluidRow(
+                                        shiny::column(12,
+                                                      shiny::tableOutput(NS(id, 'pverbatim'))
+                                        )),
+                                      shiny::fluidRow(
+                                        shiny::column(4,
+                                                      shiny::plotOutput(shiny::NS(id, 'pplot1'))
+                                        ),
+                                        shiny::column(4,
+                                                      shiny::plotOutput(shiny::NS(id, 'pplot2'))
+                                        ),
+                                        shiny::column(4,
+                                                      shiny::plotOutput(shiny::NS(id, 'pplot3'))
+                                        )
+                                      )
+                                    )
+                    )
+
     )
 
 
@@ -669,6 +697,249 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
       })
 
       output$verbatim <- renderTable(
+        data.frame(R2=R2.lm, MSE=MSE.lm, RMSE=RMSE.lm, MAE=MAE.lm)
+      )
+    })
+
+    observeEvent(input$pbuttonValidate, {
+      FINAL.data <- rbind(data(), predictData())
+      PB <- 1
+
+      # ulozeni fitovane hodnoty do dataframe
+      odhad<-predict(mod1.glm(),newdata=FINAL.data,se.fit = TRUE,interval = "prediction")
+
+      FINAL.data$pred.lm<-as.numeric(odhad$fit[,1])
+      FINAL.data$pred.lm.lwr<-as.numeric(odhad$fit[,2])
+      FINAL.data$pred.lm.upr<-as.numeric(odhad$fit[,3])
+
+      #kvgr <- sample(1:PB, nrow(FINAL.data), replace = TRUE)  # Vytvoření náhodných přiřazení dat do PB bloků
+      kvgr <- c(rep(2, dim(data())[1]), rep(1, dim(predictData())[1]))
+
+
+      # Testovací data
+      testM <-FINAL.data
+      # vysledkove vektory
+      kv.pred.lm.80<-NULL
+      kv.pred.lwr.lm.80<-NULL
+      kv.pred.upr.lm.80<-NULL
+
+      kv.pred.lm.90<-NULL
+      kv.pred.lwr.lm.90<-NULL
+      kv.pred.upr.lm.90<-NULL
+
+      kv.pred.lm.95<-NULL
+      kv.pred.lwr.lm.95<-NULL
+      kv.pred.upr.lm.95<-NULL
+
+      kv.pred.lm.99<-NULL
+      kv.pred.lwr.lm.99<-NULL
+      kv.pred.upr.lm.99<-NULL
+
+      kv.rd.lm<-NULL
+      kv.fold.lm<-NULL
+
+      kvf.lm<-NULL
+      R2.kv.lm<-NULL
+      MSE.kv.lm<-NULL
+      RMSE.kv.lm<-NULL
+      MAE.kv.lm<-NULL
+
+
+
+      # smycka vypoctu křížové validace
+      for (i in 1:PB){
+        # data pro vypocet modelu
+        MODEL.data<-FINAL.data[-which(kvgr==i),]
+        #MODEL.data<-FINAL.data
+        # data pro testovani
+        TEST.data<-FINAL.data[which(kvgr==i),]
+        #TEST.data<-predictData()
+        # vypocitam model
+        modkv.lm<-lm(formula(), data=MODEL.data)
+
+        EXP.data <- TEST.data[,input$rank_list_2]
+
+
+        # spocitam predikci
+        odkv.lm.80<-predict(modkv.lm,newdata=EXP.data,se.fit = TRUE,interval = "prediction",level = 0.80)
+        odkv.lm.90<-predict(modkv.lm,newdata=EXP.data,se.fit = TRUE,interval = "prediction",level = 0.90)
+        odkv.lm.95<-predict(modkv.lm,newdata=EXP.data,se.fit = TRUE,interval = "prediction",level = 0.95)
+        odkv.lm.99<-predict(modkv.lm,newdata=EXP.data,se.fit = TRUE,interval = "prediction",level = 0.99)
+
+        odhady.lm.80<-as.numeric(odkv.lm.80$fit[,1])
+        odhady.lm.lwr.80<-as.numeric(odkv.lm.80$fit[,2])
+        odhady.lm.upr.80<-as.numeric(odkv.lm.80$fit[,3])
+
+        odhady.lm.90<-as.numeric(odkv.lm.90$fit[,1])
+        odhady.lm.lwr.90<-as.numeric(odkv.lm.90$fit[,2])
+        odhady.lm.upr.90<-as.numeric(odkv.lm.90$fit[,3])
+
+        odhady.lm.95<-as.numeric(odkv.lm.95$fit[,1])
+        odhady.lm.lwr.95<-as.numeric(odkv.lm.95$fit[,2])
+        odhady.lm.upr.95<-as.numeric(odkv.lm.95$fit[,3])
+
+        odhady.lm.99<-as.numeric(odkv.lm.99$fit[,1])
+        odhady.lm.lwr.99<-as.numeric(odkv.lm.99$fit[,2])
+        odhady.lm.upr.99<-as.numeric(odkv.lm.99$fit[,3])
+
+
+        # radky bloku jsou
+        rafo<-as.numeric(rownames(FINAL.data[which(kvgr==i),]))
+        #rafo<-as.numeric(rownames(predictData()))
+
+
+        # vypocty do vektoru
+        kv.pred.lm.80<-c(kv.pred.lm.80,as.numeric(odhady.lm.80))
+        kv.pred.lwr.lm.80<-c(kv.pred.lwr.lm.80,as.numeric(odhady.lm.lwr.80))
+        kv.pred.upr.lm.80<-c(kv.pred.upr.lm.80,as.numeric(odhady.lm.upr.80))
+
+        kv.pred.lm.90<-c(kv.pred.lm.90,as.numeric(odhady.lm.90))
+        kv.pred.lwr.lm.90<-c(kv.pred.lwr.lm.90,as.numeric(odhady.lm.lwr.90))
+        kv.pred.upr.lm.90<-c(kv.pred.upr.lm.90,as.numeric(odhady.lm.upr.90))
+
+        kv.pred.lm.95<-c(kv.pred.lm.95,as.numeric(odhady.lm.95))
+        kv.pred.lwr.lm.95<-c(kv.pred.lwr.lm.95,as.numeric(odhady.lm.lwr.95))
+        kv.pred.upr.lm.95<-c(kv.pred.upr.lm.95,as.numeric(odhady.lm.upr.95))
+
+        kv.pred.lm.99<-c(kv.pred.lm.99,as.numeric(odhady.lm.99))
+        kv.pred.lwr.lm.99<-c(kv.pred.lwr.lm.99,as.numeric(odhady.lm.lwr.99))
+        kv.pred.upr.lm.99<-c(kv.pred.upr.lm.99,as.numeric(odhady.lm.upr.99))
+
+
+        kv.rd.lm <- c(kv.rd.lm,rafo)
+        kv.fold.lm <- c(kv.fold.lm,rep(i,length(rafo)))
+
+        # Pocitadlo bloku
+        kvf.lm<-c(kvf.lm,i)
+        # R2 KV
+        xx<-as.numeric(TEST.data[[input$var]])
+        yy<-as.numeric(predict(modkv.lm,newdata = EXP.data,type = "response"))
+        r2<-cor(xx,yy,use="complete.obs")^2
+        R2.kv.lm<-c(R2.kv.lm,r2)
+        # MSE KV testu
+        n.fit<-length(TEST.data[[input$var]])
+        mse<-sum((TEST.data[[input$var]]-predict(modkv.lm,newdata = EXP.data,type = "response"))^2,na.rm = TRUE)/n.fit
+        MSE.kv.lm<-c(MSE.kv.lm,mse)
+        # RMSE KV testu
+        rmse<-sqrt(mse)
+        RMSE.kv.lm<-c(RMSE.kv.lm,rmse)
+        # MAE KV testu
+        mae<-sum(abs(TEST.data[[input$var]]-predict(modkv.lm,newdata = EXP.data,type = "response")),na.rm = TRUE)/n.fit
+        MAE.kv.lm<-c(MAE.kv.lm,mae)
+
+      }
+
+      FINAL.data <- FINAL.data[which(kvgr==1),]
+
+
+      # sloucime vektory kv odhadu
+      kvm.raw.lm<-cbind(kv.rd.lm,kv.fold.lm,
+                        kv.pred.lm.80,kv.pred.lwr.lm.80,kv.pred.upr.lm.80,
+                        kv.pred.lm.90,kv.pred.lwr.lm.90,kv.pred.upr.lm.90,
+                        kv.pred.lm.95,kv.pred.lwr.lm.95,kv.pred.upr.lm.95,
+                        kv.pred.lm.99,kv.pred.lwr.lm.99,kv.pred.upr.lm.99)
+
+      # seřadíme je podle původních čísel řádků
+      kvdf.lm <- as.data.frame(kvm.raw.lm[order(kv.rd.lm),])
+      #kontrola identity řádků
+      # plot(kvdf.lm$kv.rd.lm~FINAL.data$X)
+      #kontrola identity bloků
+      # plot(kvdf.lm$kv.fold.lm~kvgr)
+      # vypocet Diff jako rozdil mezi predikci kv a skutecnosti (fires), Diff je odhad mínus empirická hodnota
+      # (kladné rozdíly jsou pak nadhodnocení reality, záporné podhodnocení)
+      # Diffs krizove validace
+      kvdf.lm$Diff <- kvdf.lm$kv.pred.lm.80 - FINAL.data[[input$var]]
+      # Diffs puvodniho modelu (rezidua)
+      FINAL.data$Diff <- FINAL.data$pred.lm - FINAL.data[[input$var]]
+      # Absolutni rozdily
+      kvdf.lm$absDiff<-abs(kvdf.lm$Diff)
+      FINAL.data$absDiff <- abs(FINAL.data$Diff)
+
+      # sloucime parametry/ukazatele kvalitu modelu podle kv odhadu
+      params<-as.data.frame(cbind(kvf.lm, R2.kv.lm, MSE.kv.lm,RMSE.kv.lm,MAE.kv.lm))
+
+
+      # Zjištění, kolik je % případů, kdy se skutečný počet pořárů trefí do CI predikce modelu
+      #library("dplyr")
+      # Pro celkový model 95%CI of prediction
+      puv.trefa <- dplyr::between(FINAL.data[[input$var]], FINAL.data$pred.lm.lwr, FINAL.data$pred.lm.upr)
+      puv.tbl<-table(puv.trefa)
+      # uvnitř intervalu (interval zahrnuje empirický počet, tj. TREFA)
+      as.numeric(puv.tbl[2])/(sum(puv.tbl)/100)# % případů
+      # mimo interval (interval NEzahrnuje empirický počet, tj. NETREFA)
+      as.numeric(puv.tbl[1])/(sum(puv.tbl)/100) # % případů
+
+
+      # Pro křížově validované odhady (KV)
+      # KV 80%CI of prediction
+      KV.trefa.80 <- dplyr::between(FINAL.data[[input$var]], kvdf.lm$kv.pred.lwr.lm.80, kvdf.lm$kv.pred.upr.lm.80)
+      KV.tbl.80<-table(KV.trefa.80)
+      # uvnitř intervalu (interval zahrnuje empirický počet, tj. TREFA)
+      as.numeric(KV.tbl.80[2])/(sum(KV.tbl.80)/100) # % případů
+      # mimo interval (interval NEzahrnuje empirický počet, tj. NETREFA)
+      as.numeric(KV.tbl.80[1])/(sum(KV.tbl.80)/100) # % případů
+
+      # Pro křížově validované odhady (KV)
+      # KV 90%CI of prediction
+      KV.trefa.90 <- dplyr::between(FINAL.data[[input$var]], kvdf.lm$kv.pred.lwr.lm.90, kvdf.lm$kv.pred.upr.lm.90)
+      KV.tbl.90<-table(KV.trefa.90)
+      # uvnitř intervalu (interval zahrnuje empirický počet, tj. TREFA)
+      as.numeric(KV.tbl.90[2])/(sum(KV.tbl.90)/100) # % případů
+      # mimo interval (interval NEzahrnuje empirický počet, tj. NETREFA)
+      as.numeric(KV.tbl.90[1])/(sum(KV.tbl.90)/100) # % případů
+
+      # Pro křížově validované odhady (KV)
+      # KV 95%CI of prediction
+      KV.trefa.95 <- dplyr::between(FINAL.data[[input$var]], kvdf.lm$kv.pred.lwr.lm.95, kvdf.lm$kv.pred.upr.lm.95)
+      KV.tbl.95<-table(KV.trefa.95)
+      # uvnitř intervalu (interval zahrnuje empirický počet, tj. TREFA)
+      as.numeric(KV.tbl.95[2])/(sum(KV.tbl.95)/100) # % případů
+      # mimo interval (interval NEzahrnuje empirický počet, tj. NETREFA)
+      as.numeric(KV.tbl.95[1])/(sum(KV.tbl.95)/100) # % případů
+
+      # Pro křížově validované odhady (KV)
+      # KV 99%CI of prediction
+      KV.trefa.99 <- dplyr::between(FINAL.data[[input$var]], kvdf.lm$kv.pred.lwr.lm.99, kvdf.lm$kv.pred.upr.lm.99)
+      KV.tbl.99<-table(KV.trefa.99)
+      # uvnitř intervalu (interval zahrnuje empirický počet, tj. TREFA)
+      as.numeric(KV.tbl.99[2])/(sum(KV.tbl.99)/100) # % případů
+      # mimo interval (interval NEzahrnuje empirický počet, tj. NETREFA)
+      as.numeric(KV.tbl.99[1])/(sum(KV.tbl.99)/100) # % případů
+
+      ##################################################################
+      # Nejaká zobrazení
+      ###################################################################
+      #Zobrazení R2 kv proti MSE kv
+      # přidán je průměr R2 KV proti průměru MSE kv
+      # a srovnání s pseudo R2 proti celého MSE modelu
+      R2.lm<-summary(mod1.glm())$r.squared
+      n.fit<-length(fitted.values(mod1.glm()))
+      MSE.lm<-sum((FINAL.data[[input$var]]-predict(mod1.glm(),newdata = FINAL.data))^2,na.rm = TRUE)/n.fit
+      RMSE.lm<-sqrt(MSE.lm)
+      MAE.lm<-sum(abs(FINAL.data[[input$var]]-predict(mod1.glm(),newdata = FINAL.data)),na.rm = TRUE)/n.fit
+      #graf
+      # světle modré jsou parametry odhadů jednotlivých bloků,
+      # tmavě modrý křížek je průměr těchto parametrů z KV
+      # a červené kolečko jsou tytéž parametry pro model na kompletních datech
+      output$pplot1 <- renderPlot({
+        plot(params$MSE.kv.lm~params$R2.kv.lm, pch=16,col="light blue", ylab="MSE", xlab="R2")
+        points(mean(params$MSE.kv.lm)~mean(params$R2.kv.lm),pch=4,col="blue", cex=2)
+        points(MSE.lm~R2.lm,pch=1,col="red", cex=2)
+      })
+
+      output$pplot2 <- renderPlot({
+        plot(params$R2.kv.lm~params$RMSE.kv.lm, pch=16,col="light blue", ylab="R2", xlab="RMSE")
+        points(mean(params$R2.kv.lm)~mean(params$RMSE.kv.lm),pch=4,col="blue", cex=2)
+        points(R2.lm~RMSE.lm,pch=1,col="red", cex=2)
+      })
+
+      output$pplot3 <- renderPlot({
+        plot(params$MAE.kv.lm~params$RMSE.kv.lm, pch=16,col="light blue", ylab="MAE", xlab="RMSE")
+        points(mean(params$MAE.kv.lm)~mean(params$RMSE.kv.lm),pch=4,col="blue", cex=2)
+        points(MAE.lm~RMSE.lm,pch=1,col="red", cex=2)
+      })
+
+      output$pverbatim <- renderTable(
         data.frame(R2=R2.lm, MSE=MSE.lm, RMSE=RMSE.lm, MAE=MAE.lm)
       )
     })
