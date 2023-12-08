@@ -49,7 +49,7 @@ LModelUi <- function(id) {
                                ),
                                shiny::fluidRow(
                                  shiny::column(12,
-                                   shiny::tableOutput(NS(id, 'verbatim'))
+                                   shiny::tableOutput(shiny::NS(id, 'verbatim'))
                                )),
                                shiny::fluidRow(
                                  shiny::column(4,
@@ -102,7 +102,7 @@ LModelUi <- function(id) {
                                       ),
                                       shiny::fluidRow(
                                         shiny::column(12,
-                                                      shiny::tableOutput(NS(id, 'pverbatim'))
+                                                      shiny::tableOutput(shiny::NS(id, 'pverbatim'))
                                         )),
                                       shiny::fluidRow(
                                         shiny::column(4,
@@ -150,7 +150,7 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
           )
         ),
         column(4,
-          shiny::uiOutput(NS(id, "factors"))
+          shiny::uiOutput(shiny::NS(id, "factors"))
         ),
         column(4,
           htmltools::tagList(
