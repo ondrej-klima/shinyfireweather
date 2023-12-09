@@ -368,7 +368,7 @@ GLModelServer <- function(id, data1, data2, data3, data4, data5) {
       })
       #browser()
       output$pPlot <- plotly::renderPlotly({
-        plotly::ggplotly(ggplot2::ggplot(d, ggplot2::aes(x = .data[[input$pDate]], y = pred)) +
+        p<-ggplot2::ggplot(d, ggplot2::aes(x = .data[[input$pDate]], y = pred)) +
           ggplot2::geom_point(
             ggplot2::aes(
               x = .data[[input$pDate]],
@@ -378,7 +378,9 @@ GLModelServer <- function(id, data1, data2, data3, data4, data5) {
           ggplot2::geom_line(linewidth = 0.6,color="red") +
           ggplot2::geom_ribbon(ggplot2::aes(x = .data[[input$pDate]], ymin = lower95, ymax = upper95), alpha = 0.2) +
           ggplot2::labs(x = "", y = input$var)+
-          ggplot2::ggtitle(paste("Area", input$pAreaVal)))
+          ggplot2::ggtitle(paste("Area", input$pAreaVal))
+        plotly::ggplotly(p)
+        #browser()
       })
       #print('ahoj')
       #browser()

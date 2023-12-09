@@ -3,8 +3,11 @@
 #' This function contains ui parts of shiny modules
 
 ui <- function() {
+
+  shiny::addResourcePath('figures', 'inst/figures/')
+
   bs4Dash::dashboardPage(
-    bs4Dash::dashboardHeader(title = 'KSpredict'),
+    bs4Dash::dashboardHeader(title = bs4Dash::dashboardBrand('KSpredict', image='figures/sticker.png', opacity=1, href='https://github.com/ondrej-klima/shinyfireweather/tree/main')),
     bs4Dash::dashboardSidebar(
       bs4Dash::sidebarMenu(
         bs4Dash::menuSubItem("Cíl predikce",
