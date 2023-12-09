@@ -11,7 +11,7 @@ extendByFactorLevels <- function(df) {
       result <- rbind(result, newrow)
     }
   }
-  print(dim(df))
-  print(dim(result))
+  #print(dim(df))
+  #print(dim(result))
   return(result)
 }
