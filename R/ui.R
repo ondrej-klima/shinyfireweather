@@ -43,9 +43,9 @@ ui <- function() {
            #bs4Dash::menuItem(htmltools::HTML("AutoRegressive Integrated<br />Moving Average"), startExpanded = TRUE,
            #                        bs4Dash::menuSubItem("Auto Regressor", tabName="tabARIMA"),
            #                        bs4Dash::menuSubItem("External Regressor", tabName="tabARIMAext"))
-           bs4Dash::menuSubItem(htmltools::HTML("Autoregresní integrovaný<br />klouzavý průměr"),
+           bs4Dash::menuSubItem(htmltools::HTML("ARIMA"),
                                    tabName="tabARIMA"),
-           bs4Dash::menuSubItem(htmltools::HTML("Autoregresní integrovaný<br />klouzavý průměr<br />s externím regresorem"),
+           bs4Dash::menuSubItem(htmltools::HTML("ARIMA<br />s externím regresorem"),
                                        tabName="tabARIMAext")
         ),
         bs4Dash::menuItem(htmltools::HTML("Odhady středních<br>hodnot"),
