@@ -169,6 +169,7 @@ DailyPoissonServer <- function(id, data1, data2, data3, data4) {
         ggplot2::ggplot(result1, ggplot2::aes(x=datum,y=lambda) )+
           ggplot2::geom_point(ggplot2::aes(x=datum,y=lambda))+
           ggplot2::geom_ribbon(ggplot2::aes(ymin = CIlow, ymax = CIup), alpha=0.2)+
+          ggplot2::scale_x_date(date_labels = "%b %d")+
           ggplot2::labs(x = "", y = input$var)+
           ggplot2::ggtitle(paste(input$var, input$areacode, "(Poisson)"))
       })
