@@ -73,6 +73,7 @@ GLModelServer <- function(id, data1, data2, data3, data4, data5) {
     data <- reactiveVal()
     predictData <- reactiveVal()
     mod1.glm <- reactiveVal()
+    mod1.glm.glm <- reactiveVal()
     ci <- reactiveVal()
     predCi <- reactiveVal()
 
@@ -122,23 +123,46 @@ GLModelServer <- function(id, data1, data2, data3, data4, data5) {
                   "Data 3" = data3$data(),
                   "Data 4" = data4$data(),
                   "Manuálně zadaná data" = data5$data()))
-      pred <- predict(mod1.glm(),
-                      newdata=as.data.frame(predictData()),
-      #                type="response",
-                      se.fit = TRUE)
 
-      predCi(cbind(predictData(),
-                   exp(cbind(pred=pred$fit,
-                       lower99=pred$fit-qnorm(1-0.01/2)*pred$se.fit,
-                       upper99=pred$fit+qnorm(1-0.01/2)*pred$se.fit,
-                       lower95=pred$fit-qnorm(1-0.05/2)*pred$se.fit,
-                       upper95=pred$fit+qnorm(1-0.05/2)*pred$se.fit,
-                       lower90=pred$fit-qnorm(1-0.1/2)*pred$se.fit,
-                       upper90=pred$fit+qnorm(1-0.1/2)*pred$se.fit,
-                       lower80=pred$fit-qnorm(1-0.2/2)*pred$se.fit,
-                       upper80=pred$fit+qnorm(1-0.2/2)*pred$se.fit
-                       ))
-      ))
+      newdata <- extendByFactorLevels(as.data.frame(predictData()))
+      #newdata <- predictData()
+      pred <- predict(mod1.glm(),
+                      newdata=as.data.frame(newdata),
+                      type="response")#,
+                     # se.fit = TRUE)
+
+      p1<-ciTools::add_pi(newdata, mod1.glm.glm(), names = c("lower99", "upper99"), alpha = 0.01, nsims = 10000)
+      p2<-ciTools::add_pi(newdata, mod1.glm.glm(), names = c("lower95", "upper95"), alpha = 0.05, nsims = 10000)
+      p3<-ciTools::add_pi(newdata, mod1.glm.glm(), names = c("lower90", "upper90"), alpha = 0.1, nsims = 10000)
+      p4<-ciTools::add_pi(newdata, mod1.glm.glm(), names = c("lower80", "upper80"), alpha = 0.2, nsims = 10000)
+
+      pi <- cbind(p1['lower99'],
+                  p1['upper99'],
+                  p2['lower95'],
+                  p2['upper95'],
+                  p3['lower90'],
+                  p3['upper90'],
+                  p4['lower80'],
+                  p4['upper80'])
+
+      #browser()
+
+      predCi(cbind(newdata, pred=as.vector(pred), pi))
+      predCi(predCi()[1:(dim(predictData())[1]),])
+
+
+      #predCi(cbind(predictData(),
+      #             exp(cbind(pred=pred$fit,
+      #                 lower99=pred$fit-qnorm(1-0.01/2)*pred$se.fit,
+      #                 upper99=pred$fit+qnorm(1-0.01/2)*pred$se.fit,
+      #                 lower95=pred$fit-qnorm(1-0.05/2)*pred$se.fit,
+      #                 upper95=pred$fit+qnorm(1-0.05/2)*pred$se.fit,
+      #                 lower90=pred$fit-qnorm(1-0.1/2)*pred$se.fit,
+      #                 upper90=pred$fit+qnorm(1-0.1/2)*pred$se.fit,
+      #                 lower80=pred$fit-qnorm(1-0.2/2)*pred$se.fit,
+      #                 upper80=pred$fit+qnorm(1-0.2/2)*pred$se.fit
+      #                 ))
+      #))
       output$dtable <- DT::renderDT({
         DT::datatable(predCi(), options = list(scrollX = TRUE))
       })
@@ -213,6 +237,7 @@ GLModelServer <- function(id, data1, data2, data3, data4, data5) {
         sprintf("%s~%s", input$var, paste(input$rank_list_2, collapse="+"))
       )
       mod1.glm(mgcv::gam(formula, family=poisson(link = "log"), data=as.data.frame(data())))
+      mod1.glm.glm(glm(formula, family=poisson(link = "log"), data=as.data.frame(data())))
 
       output$summary <- renderPrint({
         summary(mod1.glm())
@@ -320,6 +345,9 @@ GLModelServer <- function(id, data1, data2, data3, data4, data5) {
     })
 
     observeEvent(input$pPlotButton, {
+      d <- predCi()
+
+      #browser()
       d <- predCi() %>%
         dplyr::mutate("{input$pDate}" := as.Date(.data[[input$pDate]], "%Y-%m-%d")) %>%
         dplyr::filter(.data[[input$pDate]] >= input$pDateRange[1]) %>%
@@ -338,6 +366,7 @@ GLModelServer <- function(id, data1, data2, data3, data4, data5) {
           plotly::plotlyOutput(shiny::NS(id, "pPlot"), width = "100%"),
         )
       })
+      #browser()
       output$pPlot <- plotly::renderPlotly({
         plotly::ggplotly(ggplot2::ggplot(d, ggplot2::aes(x = .data[[input$pDate]], y = pred)) +
           ggplot2::geom_point(
@@ -351,6 +380,8 @@ GLModelServer <- function(id, data1, data2, data3, data4, data5) {
           ggplot2::labs(x = "", y = input$var)+
           ggplot2::ggtitle(paste("Area", input$pAreaVal)))
       })
+      #print('ahoj')
+      #browser()
     })
 
     observeEvent(input$confidenceLevels, {
