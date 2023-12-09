@@ -279,6 +279,7 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
     })
 
     observeEvent(input$buttonLearn, {
+      tryCatch({
       formula(as.formula(
         sprintf("%s~%s", input$var, paste(input$rank_list_2, collapse="+"))
       ))
@@ -350,7 +351,9 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
       output$fittable <- DT::renderDT({
         DT::datatable(ci(), options = list(scrollX = TRUE))
       })
-
+      }, error = function(cond) {
+        message(conditionMessage(cond))
+      })
     })
 
     observeEvent(input$area, {

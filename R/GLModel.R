@@ -28,7 +28,51 @@ GLModelUi <- function(id) {
                     shiny::tabPanel('Přesnost', htmltools::tagList(
                       shiny::tableOutput(shiny::NS(id, 'tab')),
                       shiny::verbatimTextOutput(shiny::NS(id, 'acc'))
-                    ))),
+                    )),
+                    shiny::tabPanel('Validace',
+                                    shiny::fluidPage(
+                                      shiny::fluidRow(
+                                        shiny::column(4,
+                                                      shiny::numericInput(
+                                                        shiny::NS(id, "VB"),
+                                                        label = "Velikost bloku (VB)",
+                                                        value = 50,
+                                                        min = 2
+                                                      )
+                                        ),
+                                        shiny::column(4,
+                                                      shiny::numericInput(
+                                                        shiny::NS(id, "PTB"),
+                                                        label = "Počet bloků (PTB)",
+                                                        value = 10,
+                                                        min = 2
+                                                      )
+                                        ),
+                                        shiny::column(4,
+                                                      shiny::HTML("&nbsp;<br />"),
+                                                      shiny::actionButton(
+                                                        shiny::NS(id, 'buttonValidate'),
+                                                        label = 'Validovat')
+                                        )
+                                      ),
+                                      shiny::fluidRow(
+                                        shiny::column(12,
+                                                      shiny::tableOutput(shiny::NS(id, 'verbatim'))
+                                        )),
+                                      shiny::fluidRow(
+                                        shiny::column(4,
+                                                      shiny::plotOutput(shiny::NS(id, 'plot1'))
+                                        ),
+                                        shiny::column(4,
+                                                      shiny::plotOutput(shiny::NS(id, 'plot2'))
+                                        ),
+                                        shiny::column(4,
+                                                      shiny::plotOutput(shiny::NS(id, 'plot3'))
+                                        )
+                                      )
+                                    )
+                    )
+    ),
 
     shiny::uiOutput(shiny::NS(id,'bucket')),
 
@@ -53,7 +97,34 @@ GLModelUi <- function(id) {
                     shiny::tabPanel('Graf predikovaných dat', htmltools::tagList(
                       shiny::uiOutput(shiny::NS(id, 'predictParamsUi')),
                       shiny::uiOutput(shiny::NS(id, 'pPlotUi'))
-                    ))
+                    )),
+                    shiny::tabPanel('Zpětné ověření predikce',
+                                    shiny::fluidPage(
+                                      shiny::fluidRow(
+                                        shiny::column(4,
+                                                      shiny::HTML("&nbsp;<br />"),
+                                                      shiny::actionButton(
+                                                        shiny::NS(id, 'pbuttonValidate'),
+                                                        label = 'Ověřit')
+                                        )
+                                      ),
+                                      shiny::fluidRow(
+                                        shiny::column(12,
+                                                      shiny::tableOutput(shiny::NS(id, 'pverbatim'))
+                                        )),
+                                      shiny::fluidRow(
+                                        shiny::column(4,
+                                                      shiny::plotOutput(shiny::NS(id, 'pplot1'))
+                                        ),
+                                        shiny::column(4,
+                                                      shiny::plotOutput(shiny::NS(id, 'pplot2'))
+                                        ),
+                                        shiny::column(4,
+                                                      shiny::plotOutput(shiny::NS(id, 'pplot3'))
+                                        )
+                                      )
+                                    )
+                    )
     )
 
 
@@ -76,6 +147,7 @@ GLModelServer <- function(id, data1, data2, data3, data4, data5) {
     mod1.glm.glm <- reactiveVal()
     ci <- reactiveVal()
     predCi <- reactiveVal()
+    formula <- reactiveVal()
 
     output$checkboxUi <- renderUI({
       shiny::fluidRow(
@@ -233,11 +305,11 @@ GLModelServer <- function(id, data1, data2, data3, data4, data5) {
     })
 
     observeEvent(input$buttonLearn, {
-      formula <- as.formula(
+      formula(as.formula(
         sprintf("%s~%s", input$var, paste(input$rank_list_2, collapse="+"))
-      )
-      mod1.glm(mgcv::gam(formula, family=poisson(link = "log"), data=as.data.frame(data())))
-      mod1.glm.glm(glm(formula, family=poisson(link = "log"), data=as.data.frame(data())))
+      ))
+      mod1.glm(mgcv::gam(formula(), family=poisson(link = "log"), data=as.data.frame(data())))
+      mod1.glm.glm(glm(formula(), family=poisson(link = "log"), data=as.data.frame(data())))
 
       output$summary <- renderPrint({
         summary(mod1.glm())
@@ -433,11 +505,273 @@ GLModelServer <- function(id, data1, data2, data3, data4, data5) {
         plotly::ggplotly(p)
       })
     })
+
+    observeEvent(input$buttonValidate, {
+      FINAL.data <- data()
+      FINAL.data$pred.glm1<-predict(mod1.glm(),newdata=data(),type="response")
+
+      nc<-dim(FINAL.data)[1]
+      PB <- round(nc/input$VB)
+
+      # priradime nahodne kazdy pripad do nektereho z toho velkeho poctu bloků
+      kvgr <- sample(1:PB, nrow(FINAL.data), replace = TRUE)  # Vytvoření náhodných přiřazení dat do PB bloků
+
+      PTB <- input$PTB
+      # Nahodne vybereme 10 ze vsech bloku (bez vraceni, abysme tam /velkou/nahodou nemeli nektery dvaktrat)
+      sel.kvgr<-sample(unique(kvgr),PTB, replace = FALSE)
+      # Neni to tedy prizpusobene pro data, ktera maji velmi malo pripadu. To by se muselo jeste nejak zpodminkovat..
+
+      # Pridam si cislo radku do finalnich dat (nemusi odpovidat proměnné "X" ze začátku, protože mezitím může být selekce úletů.
+      FINAL.data$FDrows<-c(1:nrow(FINAL.data))
+
+      # vysledkove vektory parametru
+      kv.rd.glm1<-NULL
+      kv.fold.glm1<-NULL
+
+      kvf.glm1<-NULL
+      R2.kv.glm1<-NULL
+      MSE.kv.glm1<-NULL
+      RMSE.kv.glm1<-NULL
+      MAE.kv.glm1<-NULL
+
+      # Vytvorim matici na vysledky predikcnich inrevalu
+      # pocet boostrap predikcnich intervalu
+      nc<-dim(FINAL.data)[1]
+      # vysledkova matice pro daný blok
+      KVrglm1M = matrix(NA, nrow = nc, ncol = 15)
+      colnames(KVrglm1M)<-c("orig.row","kvboo.glm1.pred80","kvboo.glm1.lpb80","kvboo.glm1.upb80",
+                            "kvboo.glm1.pred90","kvboo.glm1.lpb90","kvboo.glm1.upb90","kvboo.glm1.pred95","kvboo.glm1.lpb95","kvboo.glm1.upb95",
+                            "kvboo.glm1.pred99","kvboo.glm1.lpb99","kvboo.glm1.upb99","block.n","check.j")
+
+      KVrglm1M[,1]<-c(1:nrow(FINAL.data))
+
+      KVrglm1M[,14]<-kvgr
+
+      ## Casomira...
+      casomira <- progress::progress_bar$new(
+        format = "  Calculating [:bar] :percent in :elapsed",
+        total = length(sel.kvgr), clear = FALSE, width= 60)
+
+
+      # i - cislo bloku
+      # smycka vypoctu křížové validace
+      for (i in sel.kvgr){
+        # data pro vypocet modelu
+        MODEL.data<-FINAL.data[-which(kvgr==i),]
+        # data pro testovani
+        TEST.data<-FINAL.data[which(kvgr==i),]
+        # vypocitam model
+        mod1kv.glm.gam<-mgcv::gam(formula(),
+                            family = poisson(link = "log"),data=MODEL.data)
+        #summary(mod1.glm.gam)
+        #anova(mod1.glm.gam)
+        mod1kv.glm<-glm(formula(),
+                        family = poisson(link = "log"),data=MODEL.data)
+
+        EXP.data <- TEST.data[,input$rank_list_2]
+
+        # Pocitani bloku
+        kvf.glm1<-c(kvf.glm1,i)
+        # R2 KV
+        xx<-as.numeric(TEST.data[[input$var]])
+        yy<-as.numeric(predict(mod1kv.glm.gam,newdata = EXP.data,type = "response"))
+        r2<-cor(xx,yy,use="complete.obs")^2
+        R2.kv.glm1<-c(R2.kv.glm1,r2)
+        # MSE KV testu
+        n.fit<-length(TEST.data$fires)
+        mse<-sum((TEST.data[[input$var]]-predict(mod1kv.glm.gam,newdata = EXP.data,type = "response"))^2,na.rm = TRUE)/n.fit
+        MSE.kv.glm1<-c(MSE.kv.glm1,mse)
+        # RMSE KV testu
+        rmse<-sqrt(mse)
+        RMSE.kv.glm1<-c(RMSE.kv.glm1,rmse)
+        # MAE KV testu
+        mae<-sum(abs(TEST.data[[input$var]]-predict(mod1kv.glm.gam,newdata = EXP.data,type = "response")),na.rm = TRUE)/n.fit
+        MAE.kv.glm1<-c(MAE.kv.glm1,mae)
+
+
+        # PREDIKCNI INTERVALY
+        # radky z final data, ktera to ma postupne testovat
+
+        Brows<-TEST.data$FDrows
+
+        #for (j in Brows) {
+
+          #NEW.data.big<-expand.grid(
+          #  fires=0,
+          #  month=factor(levels(FINAL.data$month)),
+          #  area=factor(levels(FINAL.data$area)),
+          #  weekend=factor(levels(FINAL.data$weekend)),
+          #  teplota.maximalni=FINAL.data$teplota.maximalni[j],
+          #  vlhkost.vzduchu=FINAL.data$vlhkost.vzduchu[j],
+          #  uhrn.srazek=FINAL.data$uhrn.srazek[j],
+          #  slunecni.svit=FINAL.data$slunecni.svit[j],
+          #  celkova.vyska.snehu=FINAL.data$celkova.vyska.snehu[j],
+          #  dnu.bez.srazek=FINAL.data$dnu.bez.srazek[j],
+          #  rychlost.vetru=FINAL.data$rychlost.vetru[j]
+          #)
+
+          NEW.data.big <- extendByFactorLevels(as.data.frame(TEST.data))
+
+
+          # predikce 80% interval
+          pred.boot.glm1.80<-ciTools::add_pi(NEW.data.big, mod1kv.glm, names = c("lpb", "upb"), alpha = 0.2, nsims = 10000)
+          # z tohoto vystupu se pak vyfiltruje požadovaná hodnota
+          #bp80<-pred.boot.glm1.80[(pred.boot.glm1.80$area==FINAL.data$area[j])&(pred.boot.glm1.80$weekend==FINAL.data$weekend[j])&(pred.boot.glm1.80$month==FINAL.data$month[j]),-1]
+          bp80<-pred.boot.glm1.80[1:dim(TEST.data)[1],]
+          kvboo.glm1.pred80<-bp80$pred
+          kvboo.glm1.lpb80<-bp80$lpb
+          kvboo.glm1.upb80<-bp80$upb
+
+          # predikce 90% interval
+          pred.boot.glm1.90<-ciTools::add_pi(NEW.data.big, mod1kv.glm, names = c("lpb", "upb"), alpha = 0.1, nsims = 10000)
+          # z tohoto vystupu se pak vyfiltruje požadovaná hodnota
+          #bp90<-pred.boot.glm1.90[(pred.boot.glm1.90$area==FINAL.data$area[j])&(pred.boot.glm1.90$weekend==FINAL.data$weekend[j])&(pred.boot.glm1.90$month==FINAL.data$month[j]),-1]
+          bp90<-pred.boot.glm1.90[1:dim(TEST.data)[1],]
+          kvboo.glm1.pred90<-bp90$pred
+          kvboo.glm1.lpb90<-bp90$lpb
+          kvboo.glm1.upb90<-bp90$upb
+
+          # predikce 95% interval
+          pred.boot.glm1.95<-ciTools::add_pi(NEW.data.big, mod1kv.glm, names = c("lpb", "upb"), alpha = 0.05, nsims = 10000)
+          # z tohoto vystupu se pak vyfiltruje požadovaná hodnota
+          #bp95<-pred.boot.glm1.95[(pred.boot.glm1.95$area==FINAL.data$area[j])&(pred.boot.glm1.95$weekend==FINAL.data$weekend[j])&(pred.boot.glm1.95$month==FINAL.data$month[j]),-1]
+          bp95<-pred.boot.glm1.95[1:dim(TEST.data)[1],]
+          kvboo.glm1.pred95<-bp95$pred
+          kvboo.glm1.lpb95<-bp95$lpb
+          kvboo.glm1.upb95<-bp95$upb
+
+          # predikce 99% interval
+          pred.boot.glm1.99<-ciTools::add_pi(NEW.data.big, mod1kv.glm, names = c("lpb", "upb"), alpha = 0.01, nsims = 10000)
+          # z tohoto vystupu se pak vyfiltruje požadovaná hodnota
+          #bp99<-pred.boot.glm1.99[(pred.boot.glm1.99$area==FINAL.data$area[j])&(pred.boot.glm1.99$weekend==FINAL.data$weekend[j])&(pred.boot.glm1.99$month==FINAL.data$month[j]),-1]
+          bp99<-pred.boot.glm1.99[1:dim(TEST.data)[1],]
+          kvboo.glm1.pred99<-bp99$pred
+          kvboo.glm1.lpb99<-bp99$lpb
+          kvboo.glm1.upb99<-bp99$upb
+
+          KVrglm1M[Brows,2]<-as.numeric(kvboo.glm1.pred80)
+          KVrglm1M[Brows,3]<-as.numeric(kvboo.glm1.lpb80)
+          KVrglm1M[Brows,4]<-as.numeric(kvboo.glm1.upb80)
+          KVrglm1M[Brows,5]<-as.numeric(kvboo.glm1.pred90)
+          KVrglm1M[Brows,6]<-as.numeric(kvboo.glm1.lpb90)
+          KVrglm1M[Brows,7]<-as.numeric(kvboo.glm1.upb90)
+          KVrglm1M[Brows,8]<-as.numeric(kvboo.glm1.pred95)
+          KVrglm1M[Brows,9]<-as.numeric(kvboo.glm1.lpb95)
+          KVrglm1M[Brows,10]<-as.numeric(kvboo.glm1.upb95)
+          KVrglm1M[Brows,11]<-as.numeric(kvboo.glm1.pred99)
+          KVrglm1M[Brows,12]<-as.numeric(kvboo.glm1.lpb99)
+          KVrglm1M[Brows,13]<-as.numeric(kvboo.glm1.upb99)
+          KVrglm1M[Brows,14]<-i
+          KVrglm1M[Brows,15]<-Brows
+        #}
+        casomira$tick()
+      }
+
+      # sloucime parametry/ukazatele kvalitu modelu podle kv odhadu
+      params.glm1 <-as.data.frame(cbind(kvf.glm1, R2.kv.glm1, MSE.kv.glm1,RMSE.kv.glm1,MAE.kv.glm1))
+
+      # Testovací data, spojíme final a matici kv bloků
+      testM<-cbind(FINAL.data,KVrglm1M)
+
+      # omezime jen na data s testovanymi bloky
+      testMfglm1 <-testM[which(kvgr %in% sel.kvgr),]
+
+      # Jeste pridam rozdily odhadu KV (kv.diff a kv.absdiff), i když to Tomáš nechce a nyní nikde
+      # nezobrazujeme, treba se nekdy bude na neco hodit
+      testMfglm1$Diff.glm1 <- testMfglm1$pred.glm1 - testMfglm1$fires
+      testMfglm1$Diff.kvglm1 <- testMfglm1$kvboo.glm1.pred80 - testMfglm1$fires
+      # Absolutni rozdily
+      testMfglm1$absDiff.glm1<-abs(testMfglm1$Diff.glm1)
+      testMfglm1$absDiff.kvglm1<-abs(testMfglm1$Diff.kvglm1)
+
+      # ODPOVIDA PRED INTERVALU
+      # Pro křížově validované odhady (KV)
+      # KV 80%CI of prediction
+      KV.trefa.80 <- dplyr::between(testMfglm1[[input$var]], testMfglm1$kvboo.glm1.lpb80, testMfglm1$kvboo.glm1.upb80)
+      KV.tbl.glm1.80<-table(KV.trefa.80)
+      # uvnitř intervalu (interval zahrnuje empirický počet, tj. TREFA)
+      as.numeric(KV.tbl.glm1.80[2])/(sum(KV.tbl.glm1.80)/100) # % případů
+      # mimo interval (interval NEzahrnuje empirický počet, tj. NETREFA)
+      as.numeric(KV.tbl.glm1.80[1])/(sum(KV.tbl.glm1.80)/100) # % případů
+
+      # Pro křížově validované odhady (KV)
+      # KV 90%CI of prediction
+      KV.trefa.90 <- dplyr::between(testMfglm1[[input$var]], testMfglm1$kvboo.glm1.lpb90, testMfglm1$kvboo.glm1.upb90)
+      KV.tbl.glm1.90<-table(KV.trefa.90)
+      # uvnitř intervalu (interval zahrnuje empirický počet, tj. TREFA)
+      as.numeric(KV.tbl.glm1.90[2])/(sum(KV.tbl.glm1.90)/100) # % případů
+      # mimo interval (interval NEzahrnuje empirický počet, tj. NETREFA)
+      as.numeric(KV.tbl.glm1.90[1])/(sum(KV.tbl.glm1.90)/100) # % případů
+
+      # Pro křížově validované odhady (KV)
+      # KV 95%CI of prediction
+      KV.trefa.95 <- dplyr::between(testMfglm1[[input$var]], testMfglm1$kvboo.glm1.lpb95, testMfglm1$kvboo.glm1.upb95)
+      KV.tbl.glm1.95<-table(KV.trefa.95)
+      # uvnitř intervalu (interval zahrnuje empirický počet, tj. TREFA)
+      as.numeric(KV.tbl.glm1.95[2])/(sum(KV.tbl.glm1.95)/100) # % případů
+      # mimo interval (interval NEzahrnuje empirický počet, tj. NETREFA)
+      as.numeric(KV.tbl.glm1.95[1])/(sum(KV.tbl.glm1.95)/100) # % případů
+
+      # Pro křížově validované odhady (KV)
+      # KV 99%CI of prediction
+      KV.trefa.99 <- dplyr::between(testMfglm1[[input$var]], testMfglm1$kvboo.glm1.lpb99, testMfglm1$kvboo.glm1.upb99)
+      KV.tbl.glm1.99<-table(KV.trefa.99)
+      # uvnitř intervalu (interval zahrnuje empirický počet, tj. TREFA)
+      as.numeric(KV.tbl.glm1.99[2])/(sum(KV.tbl.glm1.99)/100) # % případů
+      # mimo interval (interval NEzahrnuje empirický počet, tj. NETREFA)
+      as.numeric(KV.tbl.glm1.99[1])/(sum(KV.tbl.glm1.99)/100) # % případů
+
+
+      ##################################################################
+      # Nejaká zobrazení
+      ###################################################################
+      #Zobrazení R2 kv proti MSE kv
+      # přidán je průměr R2 KV proti průměru MSE kv
+      # a srovnání s pseudo R2 proti celého MSE modelu
+
+      # pseudo R2
+      pseudo.R2.glm1<-summary(mod1.glm())$r.sq
+      # MSE modelu
+      n.fit<-length(fitted.values(mod1.glm.glm()))
+      MSE.glm1<-sum((FINAL.data[[input$var]]-predict(mod1.glm.glm(),newdata = FINAL.data,type = "response"))^2,na.rm = TRUE)/n.fit
+      # RMSE
+      RMSE.glm1<-sqrt(MSE.glm1)
+      # MAE
+      MAE.glm1<-sum(abs(FINAL.data[[input$var]]-predict(mod1.glm.glm(),newdata = FINAL.data,type = "response")),na.rm = TRUE)/n.fit
+
+      #graf
+      # světle modré jsou parametry odhadů jednotlivých bloků,
+      # tmavě modrý křížek je průměr těchto parametrů z KV
+      # a červené kolečko jsou tytéž parametry pro model na kompletních datech
+      output$plot1 <- renderPlot({
+        plot(params.glm1$MSE.kv.glm1~params.glm1$R2.kv.glm1, pch=16,col="light blue", ylab="MSE", xlab="R2")
+        points(mean(params.glm1$MSE.kv.glm1)~mean(params.glm1$R2.kv.glm1),pch=4,col="blue", cex=2)
+        points(MSE.glm1~pseudo.R2.glm1,pch=1,col="red", cex=2)
+      })
+
+      output$plot2 <- renderPlot({
+        plot(params.glm1$R2.kv.glm1~params.glm1$RMSE.kv.glm1, pch=16,col="light blue", ylab="RMSE", xlab="R2")
+        points(mean(params.glm1$R2.kv.glm1)~mean(params.glm1$RMSE.kv.glm1),pch=4,col="blue", cex=2)
+        points(pseudo.R2.glm1~RMSE.glm1,pch=1,col="red", cex=2)
+      })
+
+      output$plot3 <- renderPlot({
+        plot(params.glm1$MAE.kv.glm1~params.glm1$RMSE.kv.glm1, pch=16,col="light blue", ylab="MAE", xlab="RMSE")
+        points(mean(params.glm1$MAE.kv.glm1)~mean(params.glm1$RMSE.kv.glm1),pch=4,col="blue", cex=2)
+        points(MAE.glm1~RMSE.glm1,pch=1,col="red", cex=2)
+      })
+
+      output$verbatim <- renderTable(
+        data.frame(R2=pseudo.R2.glm1, MSE=MSE.glm1, RMSE=RMSE.glm1, MAE=MAE.glm1)
+      )
+    })
+
     return(
       list(
         data = predCi
       )
     )
   })
+
   # https://stackoverflow.com/questions/42454097/dynamic-number-of-x-values-dependent-variables-in-glm-function-in-r-isnt-givi
 }
