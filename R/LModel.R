@@ -191,16 +191,22 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
       #                type="response",
                       se.fit = TRUE)
 
+      pi80 <- predict(mod1.glm(),newdata=as.data.frame(predictData()),interval = "prediction",level = 0.80)
+      pi90 <- predict(mod1.glm(),newdata=as.data.frame(predictData()),interval = "prediction",level = 0.90)
+      pi95 <- predict(mod1.glm(),newdata=as.data.frame(predictData()),interval = "prediction",level = 0.95)
+      pi99 <- predict(mod1.glm(),newdata=as.data.frame(predictData()),interval = "prediction",level = 0.99)
+
+      #browser()
       predCi(cbind(predictData(),
                    cbind(pred=pred$fit,
-                       lower99=pred$fit-qnorm(1-0.01/2)*pred$se.fit,
-                       upper99=pred$fit+qnorm(1-0.01/2)*pred$se.fit,
-                       lower95=pred$fit-qnorm(1-0.05/2)*pred$se.fit,
-                       upper95=pred$fit+qnorm(1-0.05/2)*pred$se.fit,
-                       lower90=pred$fit-qnorm(1-0.1/2)*pred$se.fit,
-                       upper90=pred$fit+qnorm(1-0.1/2)*pred$se.fit,
-                       lower80=pred$fit-qnorm(1-0.2/2)*pred$se.fit,
-                       upper80=pred$fit+qnorm(1-0.2/2)*pred$se.fit
+                       lower99=pi99[,"lwr"],
+                       upper99=pi99[,"upr"],
+                       lower95=pi95[,"lwr"],
+                       upper95=pi95[,"upr"],
+                       lower90=pi90[,"lwr"],
+                       upper90=pi90[,"upr"],
+                       lower80=pi80[,"lwr"],
+                       upper80=pi80[,"upr"]
                        )
       ))
       output$dtable <- DT::renderDT({
