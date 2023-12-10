@@ -390,6 +390,84 @@ editDataServer <- function(id,
       })
     })
 
+    shiny::observeEvent(input$buttonAsDate, {
+      var <- colnames(db())[1]
+      data(data() %>%
+             dplyr::mutate("{var}_date":=as.Date(.data[[var]]))
+      )
+      selcol(paste(var, "_date"))
+      output$dtable <- DT::renderDT({
+        shiny::isolate({
+          DT::datatable(data(), options = list(scrollX = TRUE))
+        })
+      })
+    })
+
+    shiny::observeEvent(input$buttonAsInteger, {
+      var <- colnames(db())[1]
+      data(data() %>%
+             dplyr::mutate("{var}_integer":=as.integer(.data[[var]]))
+      )
+      selcol(paste(var, "_integer"))
+      output$dtable <- DT::renderDT({
+        shiny::isolate({
+          DT::datatable(data(), options = list(scrollX = TRUE))
+        })
+      })
+    })
+
+    shiny::observeEvent(input$buttonAsDouble, {
+      var <- colnames(db())[1]
+      data(data() %>%
+             dplyr::mutate("{var}_double":=as.double(.data[[var]]))
+      )
+      selcol(paste(var, "_double"))
+      output$dtable <- DT::renderDT({
+        shiny::isolate({
+          DT::datatable(data(), options = list(scrollX = TRUE))
+        })
+      })
+    })
+
+    shiny::observeEvent(input$buttonAsString, {
+      var <- colnames(db())[1]
+      data(data() %>%
+             dplyr::mutate("{var}_character":=as.character(.data[[var]]))
+      )
+      selcol(paste(var, "_character"))
+      output$dtable <- DT::renderDT({
+        shiny::isolate({
+          DT::datatable(data(), options = list(scrollX = TRUE))
+        })
+      })
+    })
+
+    shiny::observeEvent(input$buttonAsFactor, {
+      var <- colnames(db())[1]
+      data(data() %>%
+             dplyr::mutate("{var}_factor":=as.factor(.data[[var]]))
+      )
+      selcol(paste(var, "_factor"))
+      output$dtable <- DT::renderDT({
+        shiny::isolate({
+          DT::datatable(data(), options = list(scrollX = TRUE))
+        })
+      })
+    })
+
+    shiny::observeEvent(input$buttonAsNumeric, {
+      var <- colnames(db())[1]
+      data(data() %>%
+             dplyr::mutate("{var}_numeric":=as.numeric(.data[[var]]))
+      )
+      selcol(paste(var, "_numeric"))
+      output$dtable <- DT::renderDT({
+        shiny::isolate({
+          DT::datatable(data(), options = list(scrollX = TRUE))
+        })
+      })
+    })
+
     shiny::observeEvent(input$buttonWeekend, {
       var <- colnames(db())[1]
       data(data() %>%
