@@ -63,11 +63,16 @@ editDataServer <- function(id,
     historyCount <- reactiveVal(1)
 
     observeEvent(input$undo, {
+      tryCatch({
       if(length(dataHistory()) > 0) {
         data(dataHistory()[[length(dataHistory())-1]])
         dataHistory(dataHistory()[-length(dataHistory())])
         loadTable()
       }
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     setData <- function(newdata) {
@@ -175,11 +180,17 @@ editDataServer <- function(id,
     }
 
     shiny::observeEvent(input$loadExample, {
+      tryCatch({
       setData(exampleData)
       loadTable()
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonJoin, {
+      tryCatch({
       setData(dplyr::left_join(
         switch(input$joinDataChoice1,
                 "Data 1" = data1$data(),
@@ -193,9 +204,14 @@ editDataServer <- function(id,
                 "Data 4" = data4$data()),
         by=input$joinCols))
       loadTable()
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$selectJoinButton, {
+      tryCatch({
       output$joinColumns <- renderUI({
         htmltools::tagList(
           shiny::checkboxGroupInput(
@@ -217,15 +233,25 @@ editDataServer <- function(id,
           shiny::actionButton(NS(id,'buttonJoin'), 'Join')
         )
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$loadenv, {
+      tryCatch({
       setData(get(input$envar, envir = globalenv()))
       loadTable()
       output$checkboxUi <- shiny::renderUI({})
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$upload, {
+      tryCatch({
       ext <- tolower(tools::file_ext(input$upload$datapath))
       if(ext == "xlsx") {
         output$checkboxUi <- shiny::renderUI({
@@ -250,9 +276,14 @@ editDataServer <- function(id,
         setData(read.csv2(input$upload$datapath))
         loadTable()
       }
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$uploadMultiple, {
+      tryCatch({
       lst <- list()
       shiny::withProgress({
         n <- length(input$uploadMultiple[,1])
@@ -264,11 +295,16 @@ editDataServer <- function(id,
       })
       setData(dplyr::bind_rows(lst))
       loadTable()
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     sheetNames <- shiny::reactiveVal()
 
     shiny::observeEvent(input$confirm, {
+      tryCatch({
       setData({
         r <- NULL
         shiny::withProgress({
@@ -291,6 +327,10 @@ editDataServer <- function(id,
         r
       })
       loadTable()
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     output$selectColumn <- shiny::renderUI({
@@ -359,21 +399,31 @@ editDataServer <- function(id,
     })
 
     shiny::observeEvent(input$buttonAggregate, {
+      tryCatch({
       if(length(input$buttonAggregate) > 0) {
         setData(data() %>%
                dplyr::group_by_at(input$aggregateCols) %>%
                dplyr::summarize(n = dplyr::n()))
         loadTable()
       }
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$importTabButton, {
+      tryCatch({
       setData(switch(input$dataChoice,
                   "Data 1" = data1$data(),
                   "Data 2" = data2$data(),
                   "Data 3" = data3$data(),
                   "Data 4" = data4$data()))
       loadTable()
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     db <- shiny::reactive({
@@ -395,13 +445,19 @@ editDataServer <- function(id,
     })
 
     shiny::observeEvent(input$buttonDate, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>% dplyr::mutate("{var}" := as.character(
         openxlsx::convertToDate(.data[[var]]))))
       DT::replaceData(proxy, data(), resetPaging = FALSE)
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonDateSplit, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>%
             dplyr::mutate(day=as.factor(stringr::str_sub(as.character(.data[[var]]), 9, 10))) %>%
@@ -415,9 +471,14 @@ editDataServer <- function(id,
           DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonAsDate, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>%
              dplyr::mutate("{var}_date":=as.Date(.data[[var]]))
@@ -429,9 +490,14 @@ editDataServer <- function(id,
           DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonAsInteger, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>%
              dplyr::mutate("{var}_integer":=as.integer(.data[[var]]))
@@ -443,9 +509,14 @@ editDataServer <- function(id,
           DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonAsDouble, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>%
              dplyr::mutate("{var}_double":=as.double(.data[[var]]))
@@ -457,9 +528,14 @@ editDataServer <- function(id,
           DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonAsString, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>%
              dplyr::mutate("{var}_character":=as.character(.data[[var]]))
@@ -471,9 +547,14 @@ editDataServer <- function(id,
           DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonAsFactor, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>%
              dplyr::mutate("{var}_factor":=as.factor(.data[[var]]))
@@ -485,9 +566,14 @@ editDataServer <- function(id,
           DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonAsNumeric, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>%
              dplyr::mutate("{var}_numeric":=as.numeric(.data[[var]]))
@@ -499,9 +585,14 @@ editDataServer <- function(id,
           DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonWeekend, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>%
              dplyr::mutate(weekend=as.factor((
@@ -514,9 +605,14 @@ editDataServer <- function(id,
           DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonCumsum, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>%
              dplyr::mutate(cumsum=cumsum(.data[[var]]))
@@ -528,9 +624,14 @@ editDataServer <- function(id,
           DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonFilter, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(switch(input$operator,
                   '==' = data() %>%
@@ -549,26 +650,41 @@ editDataServer <- function(id,
                     dplyr::filter(!is.na(.data[[var]]))
       ))
       DT::replaceData(proxy, data(), resetPaging = FALSE)
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonFill, {
+      tryCatch({
       var <- colnames(db())[1]
       varSrc <- input$selectCol2
       setData(data() %>% dplyr::mutate(
         "{var}" := dplyr::coalesce(.data[[var]], .data[[varSrc]]))
         )
       DT::replaceData(proxy, data(), resetPaging = FALSE)
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonFill0, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>% dplyr::mutate(
         "{var}" := dplyr::coalesce(as.double(.data[[var]]), 0))
       )
       DT::replaceData(proxy, data(), resetPaging = FALSE)
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonDuplicate, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>% dplyr::mutate("{var}_dup" := .data[[var]]))
       datanames(colnames(data()))
@@ -578,9 +694,14 @@ editDataServer <- function(id,
           DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonRename, {
+      tryCatch({
       var <- colnames(db())[1]
       if(input$name != var) {
         setData(data() %>%
@@ -594,9 +715,14 @@ editDataServer <- function(id,
           })
         })
       }
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonRLE, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>%
              dplyr::group_by(area) %>%
@@ -609,9 +735,14 @@ editDataServer <- function(id,
           DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonDrop, {
+      tryCatch({
       var <- colnames(db())[1]
       setData(data() %>% dplyr::select(-var))
       datanames(colnames(data()))
@@ -621,9 +752,14 @@ editDataServer <- function(id,
           DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$buttonArea, {
+      tryCatch({
       var <- colnames(db())[1]
 
       areas <- list(KVK = "Karlovarský", STC = "Středočeský",
@@ -645,9 +781,14 @@ editDataServer <- function(id,
         )
       }
       DT::replaceData(proxy, data(), resetPaging = FALSE)
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$coltable_cell_edit, {
+      tryCatch({
       info <- input$coltable_cell_edit
       var <- colnames(db())[1]
       val <- db()[info$row, info$col]
@@ -657,10 +798,19 @@ editDataServer <- function(id,
                                                .data[[var]])))
 
       DT::replaceData(proxy, data(), resetPaging = FALSE)
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     shiny::observeEvent(input$storenv, {
+      tryCatch({
       assign(input$outvar, data(), envir = globalenv())
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     output$downloadData <- shiny::downloadHandler(
