@@ -12,28 +12,28 @@ ui <- function() {
       bs4Dash::sidebarMenu(
         bs4Dash::menuSubItem("Cíl predikce",
                                     tabName = "tabInfo",
-                                    icon = shiny::icon("info")),
+                                    icon = shiny::icon("info", verify_fa = FALSE)),
         bs4Dash::menuItem("Data",
                                  icon = shiny::icon("database"),
                                  startExpanded = TRUE,
            bs4Dash::menuSubItem("Data 1",
                              tabName = "tabData1",
-                             icon = shiny::icon("table")),
+                             icon = shiny::icon("table", verify_fa = FALSE)),
            bs4Dash::menuSubItem("Data 2",
                              tabName = "tabData2",
-                             icon = shiny::icon("table")),
+                             icon = shiny::icon("table", verify_fa = FALSE)),
            bs4Dash::menuSubItem("Data 3",
                              tabName = "tabData3",
-                             icon = shiny::icon("table")),
+                             icon = shiny::icon("table", verify_fa = FALSE)),
            bs4Dash::menuSubItem("Data 4",
                              tabName = "tabData4",
-                             icon = shiny::icon("table")),
+                             icon = shiny::icon("table", verify_fa = FALSE)),
            bs4Dash::menuSubItem("Manuální zadání",
                                 tabName = "tabManual",
-                                icon = shiny::icon("table"))
+                                icon = shiny::icon("table", verify_fa = FALSE))
         ),
         bs4Dash::menuItem("Model",
-                                 icon = shiny::icon("chart-line"),
+                                 icon = shiny::icon("chart-line", verify_fa = FALSE),
                                  startExpanded = TRUE,
            bs4Dash::menuSubItem(htmltools::HTML("Lineární Model"),
                                  tabName = "tabLModel"),
@@ -52,29 +52,29 @@ ui <- function() {
                                        tabName="tabARIMAext")
         ),
         bs4Dash::menuItem(htmltools::HTML("Odhady středních<br>hodnot"),
-                          icon = shiny::icon("bullseye"),
+                          icon = shiny::icon("bullseye", verify_fa = FALSE),
                           startExpanded = TRUE,
               bs4Dash::menuSubItem(htmltools::HTML("Poissonovský<br>denní odhad"),
-                          tabName = "tabDailyPoisson", icon = shiny::icon("calendar-o")
+                          tabName = "tabDailyPoisson", icon = shiny::icon("calendar-o", verify_fa = FALSE)
               ),
               bs4Dash::menuSubItem(htmltools::HTML("Kvazi-poissonovský<br>denní odhad"),
-                          tabName = "tabDailyQuasiPoisson", icon = shiny::icon("calendar-o")
+                          tabName = "tabDailyQuasiPoisson", icon = shiny::icon("calendar-o", verify_fa = FALSE)
               ),
               bs4Dash::menuSubItem(htmltools::HTML("Bootstrapový<br>denní odhad"),
-                          tabName = "tabDailyBootstrap", icon = shiny::icon("calendar-o")
+                          tabName = "tabDailyBootstrap", icon = shiny::icon("calendar-o", verify_fa = FALSE)
               ),
               bs4Dash::menuSubItem(htmltools::HTML("Poissonovský<br>měsíční odhad"),
-                                   tabName = "tabMonthlyPoisson", icon = shiny::icon("calendar")
+                                   tabName = "tabMonthlyPoisson", icon = shiny::icon("calendar", verify_fa = FALSE)
               ),
               bs4Dash::menuSubItem(htmltools::HTML("Kvazi-poissonovský<br>měsíční  odhad"),
-                                   tabName = "tabMonthlyQuasiPoisson", icon = shiny::icon("calendar")
+                                   tabName = "tabMonthlyQuasiPoisson", icon = shiny::icon("calendar", verify_fa = FALSE)
               ),
               bs4Dash::menuSubItem(htmltools::HTML("Bootstrapový<br>měsíční odhad"),
-                                   tabName = "tabMonthlyBootstrap", icon = shiny::icon("calendar")
+                                   tabName = "tabMonthlyBootstrap", icon = shiny::icon("calendar", verify_fa = FALSE)
               )
       ),
       bs4Dash::menuItem(htmltools::HTML("Opatření k redukci<br>rizik"),
-                        icon = shiny::icon("wallet"),
+                        icon = shiny::icon("wallet", verify_fa = FALSE),
                         tabName = "tabCostsEvaluation")
     )),
     bs4Dash::dashboardBody(
