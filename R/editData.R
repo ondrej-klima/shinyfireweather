@@ -51,7 +51,8 @@ editDataServer <- function(id,
                            data1 = NULL,
                            data2 = NULL,
                            data3 = NULL,
-                           data4 = NULL) {
+                           data4 = NULL,
+                           exampleCaption = NULL) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- shiny::reactiveVal()
     datanames <- shiny::reactiveVal()
@@ -63,11 +64,14 @@ editDataServer <- function(id,
       DT::datatable(NULL, options = list(scrollX = TRUE))
     })
 
+    output$exampleCaption <- shiny::renderText(exampleCaption)
+
     output$inputTabs <- shiny::renderUI({
       tabExample <- shiny::tabPanel("Ukázková data", htmltools::tagList(
         #htmltools::strong("Načíst ukázková data"),
         #htmltools::br(),
-        shiny::actionButton(NS(id, "loadExample"), "Načíst ukázková data")
+        shiny::textOutput(shiny::NS(id, "exampleCaption")),
+        shiny::actionButton(shiny::NS(id, "loadExample"), "Načíst ukázková data")
       ))
 
       tabSingleFile <- shiny::tabPanel("Soubor", htmltools::tagList(
