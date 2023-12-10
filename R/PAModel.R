@@ -86,6 +86,8 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
     })
 
     observeEvent(input$dataChoice, {
+      tryCatch({
+
       data(switch(input$dataChoice,
                  "Data 1" = data1$data(),
                  "Data 2" = data2$data(),
@@ -120,17 +122,26 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
           shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Vytvořit"))
         )
       })
-
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$area, {
+      tryCatch({
       output$areaui <- renderUI({
         shiny::selectInput(shiny::NS(id,"areacode"), "Kraj",
                            choices = unique(data()[[input$area]]))
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$buttonLearn, {
+      tryCatch({
       d <- data() %>%
         dplyr::filter(.data[[input$area]] == input$areacode) %>%
         dplyr::arrange(input$date)
@@ -220,6 +231,10 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
         DT::datatable(pred.fit.var, options = list(scrollX = TRUE))
       })
       predCi(pred.fit.var)
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
     return(
       list(

@@ -180,6 +180,7 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
     })
 
     observeEvent(input$buttonPredict, {
+      tryCatch({
       predictData(switch(input$dataChoicePredict,
                   "Data 1" = data1$data(),
                   "Data 2" = data2$data(),
@@ -236,9 +237,14 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
         #  shiny::actionButton(shiny::NS(id, "pPlotButton"), "Plot")
         #)
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$dataChoice, {
+      tryCatch({
       data(switch(input$dataChoice,
                  "Data 1" = data1$data(),
                  "Data 2" = data2$data(),
@@ -275,6 +281,10 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
           #                          inline = TRUE),
 
         )
+      })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
       })
     })
 
@@ -351,28 +361,41 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
       output$fittable <- DT::renderDT({
         DT::datatable(ci(), options = list(scrollX = TRUE))
       })
+
       }, error = function(cond) {
-        message(conditionMessage(cond))
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
       })
     })
 
     observeEvent(input$area, {
+      tryCatch({
       output$areaValUi <- renderUI({
         shiny::selectInput(shiny::NS(id, "areaVal"),
                            'Kraj',
                            unique(data()[[input$area]]))
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$pArea, {
+      tryCatch({
       output$pAreaValUi <- renderUI({
         shiny::selectInput(shiny::NS(id, "pAreaVal"),
                            'Kraj',
                            unique(data()[[input$pArea]]))
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$plotButton, {
+      tryCatch({
       d <- ci() %>%
         dplyr::mutate("{input$date}" := as.Date(.data[[input$date]], "%Y-%m-%d")) %>%
         dplyr::filter(.data[[input$date]] >= input$dateRange[1]) %>%
@@ -390,9 +413,14 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
           ggplot2::labs(x = "", y = input$var)+
           ggplot2::ggtitle(paste("Area", input$areaVal)))
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$pPlotButton, {
+      tryCatch({
       d <- predCi() %>%
         dplyr::mutate("{input$pDate}" := as.Date(.data[[input$pDate]], "%Y-%m-%d")) %>%
         dplyr::filter(.data[[input$pDate]] >= input$pDateRange[1]) %>%
@@ -424,9 +452,14 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
           ggplot2::labs(x = "", y = input$var)+
           ggplot2::ggtitle(paste("Area", input$pAreaVal)))
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$confidenceLevels, {
+      tryCatch({
       d <- predCi() %>%
         dplyr::mutate("{input$pDate}" := as.Date(.data[[input$pDate]], "%Y-%m-%d")) %>%
         dplyr::filter(.data[[input$pDate]] >= input$pDateRange[1]) %>%
@@ -472,9 +505,14 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
       output$pPlot <- plotly::renderPlotly({
         plotly::ggplotly(p)
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$buttonValidate, {
+      tryCatch({
       FINAL.data <- data()
       PB <- input$K
 
@@ -708,9 +746,14 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
       output$verbatim <- renderTable(
         data.frame(R2=R2.lm, MSE=MSE.lm, RMSE=RMSE.lm, MAE=MAE.lm)
       )
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$pbuttonValidate, {
+      tryCatch({
       FINAL.data <- rbind(data(), predictData())
       PB <- 1
 
@@ -951,6 +994,10 @@ LModelServer <- function(id, data1, data2, data3, data4, data5) {
       output$pverbatim <- renderTable(
         data.frame(R2=R2.lm, MSE=MSE.lm, RMSE=RMSE.lm, MAE=MAE.lm)
       )
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     return(

@@ -49,6 +49,7 @@ ManualDataServer <- function(id,
   shiny::moduleServer(id, function (input, output, session) {
     data <- reactiveVal()
     observeEvent(input$load, {
+      tryCatch({
       df <- switch(input$data,
                "Data 1" = data1$data(),
                "Data 2" = data2$data(),
@@ -73,10 +74,19 @@ ManualDataServer <- function(id,
           )
         })
       }
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$table, {
+      tryCatch({
       data(rhandsontable::hot_to_r(input$table))
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     return(

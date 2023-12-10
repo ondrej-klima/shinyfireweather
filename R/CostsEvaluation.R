@@ -179,11 +179,17 @@ CostsEvaluationServer <- function(id,
       )
 
     observeEvent(input$table1, {
+      tryCatch({
       df = rhandsontable::hot_to_r(input$table1)
       df1(df)
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$buttonLoad1, {
+      tryCatch({
       df2(isolate(cbind(df1(),
                         "costs" = as.numeric(rep(NA, 14)),
                         "conseq" = as.numeric(rep(NA, 14)),
@@ -224,9 +230,14 @@ CostsEvaluationServer <- function(id,
       )
       # https://github.com/jrowen/rhandsontable/issues/116
       # https://stackoverflow.com/questions/39752455/changing-background-color-of-several-rows-in-rhandsontable
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$table2, {
+      tryCatch({
         X<-df1()
         i <- which(X[,"upperb"]>input$uppernormval | X[,"lowerb"]<input$lowernormval)
 
@@ -246,10 +257,15 @@ CostsEvaluationServer <- function(id,
           X[seq(1,dim(X)[1],2), "BCR"] <- NA
           df2(X %>% dplyr::select(-scenario))
         }
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
 
     })
 
     observeEvent(input$table3, {
+      tryCatch({
       X<-df1()
       i <- which(X[,"upperb"]>input$uppernormval | X[,"lowerb"]<input$lowernormval)
 
@@ -278,10 +294,14 @@ CostsEvaluationServer <- function(id,
         X[seq(1,dim(X)[1],2), "BCR"] <- NA
         df3(X %>% dplyr::select(-scenario))
       }
-
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$buttonLoad2, {
+      tryCatch({
       df3(isolate(cbind(df1(),
                         "costs" = factor(rep(NA, 14), levels = labelsCosts),
                         "conseq" = factor(rep(NA, 14), levels = labelsConseq),
@@ -320,6 +340,10 @@ CostsEvaluationServer <- function(id,
           rhandsontable::hot_col("RPN", readOnly = T) %>%
           rhandsontable::hot_col("BCR", readOnly = T)
       )
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     output$fitUi <- renderUI({
@@ -329,6 +353,7 @@ CostsEvaluationServer <- function(id,
     })
 
     observeEvent(input$dataChoice, {
+      tryCatch({
 
       if(input$dataChoice != "") {
 
@@ -371,6 +396,10 @@ CostsEvaluationServer <- function(id,
       #browser()
       df1(xtab2)
       }
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
   })

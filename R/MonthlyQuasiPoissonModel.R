@@ -85,6 +85,7 @@ MonthlyQuasiPoissonServer <- function(id, data1, data2, data3, data4) {
     })
 
     observeEvent(input$dataChoice, {
+      tryCatch({
 
         data(shiny::isolate({switch(input$dataChoice,
                    "Data 1" = data1$data(),
@@ -112,16 +113,26 @@ MonthlyQuasiPoissonServer <- function(id, data1, data2, data3, data4) {
           choices = colnames(data())
         )
       )
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$area, {
+      tryCatch({
       output$areaui <- renderUI({
         shiny::selectInput(shiny::NS(id,"areacode"), "Kraj",
                            choices = unique(data()[[input$area]]))
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$buttonLearn, {
+      tryCatch({
       d <- data() %>%
         dplyr::filter(.data[[input$area]] == input$areacode) %>%
         dplyr::arrange(input$date) %>%
@@ -205,6 +216,10 @@ MonthlyQuasiPoissonServer <- function(id, data1, data2, data3, data4) {
         DT::datatable(RESULT2, options = list(scrollX = TRUE))
       })
       predCi(RESULT2)
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
     return(
       list(

@@ -92,6 +92,7 @@ ARIMAextModelServer <- function(id, data1, data2, data3, data4) {
     })
 
     observeEvent(input$dataChoice, {
+      tryCatch({
       data(switch(input$dataChoice,
                  "Data 1" = data1$data(),
                  "Data 2" = data2$data(),
@@ -135,11 +136,15 @@ ARIMAextModelServer <- function(id, data1, data2, data3, data4) {
           )
         )
       })
-
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
 
     observeEvent(input$buttonLearn, {
+      tryCatch({
       d <- data() %>%
         dplyr::mutate("{input$date}" := as.Date(.data[[input$date]])) %>%
         dplyr::arrange(input$date)
@@ -213,6 +218,10 @@ ARIMAextModelServer <- function(id, data1, data2, data3, data4) {
 
       output$dtable <- DT::renderDT({
         DT::datatable(pred.fit.var, options = list(scrollX = TRUE))
+      })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
       })
     })
     return(
