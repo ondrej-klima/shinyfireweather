@@ -61,7 +61,7 @@ editDataServer <- function(id,
     proxy <- DT::dataTableProxy("dtable")
 
     output$dtable <- DT::renderDT({
-      DT::datatable(NULL, options = list(scrollX = TRUE))
+      DT::datatable(NULL, options = list(scrollX = TRUE), selection="none")
     })
 
     output$exampleCaption <- shiny::renderText(exampleCaption)
@@ -147,7 +147,7 @@ editDataServer <- function(id,
       shiny::isolate({
         output$dtable <- DT::renderDT({
           datanames(colnames(data()))
-          DT::datatable(data(), options = list(scrollX = TRUE))
+          DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
     }
@@ -365,7 +365,7 @@ editDataServer <- function(id,
 
     output$coltable <- DT::renderDT({
       DT::datatable(db(), rownames = T, editable = 'cell',
-                    options = list(scrollX = TRUE))
+                    options = list(scrollX = TRUE), selection="none")
     })
 
     shiny::observeEvent(input$buttonDate, {
@@ -382,10 +382,11 @@ editDataServer <- function(id,
             dplyr::mutate(month=as.factor(stringr::str_sub(as.character(.data[[var]]), 6, 7))) %>%
             dplyr::mutate(year=as.factor(stringr::str_sub(as.character(.data[[var]]), 1, 4)))
           )
+      datanames(colnames(data()))
       selcol(input$name)
       output$dtable <- DT::renderDT({
         shiny::isolate({
-          DT::datatable(data(), options = list(scrollX = TRUE))
+          DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
     })
@@ -395,10 +396,11 @@ editDataServer <- function(id,
       data(data() %>%
              dplyr::mutate("{var}_date":=as.Date(.data[[var]]))
       )
+      datanames(colnames(data()))
       selcol(paste(var, "_date"))
       output$dtable <- DT::renderDT({
         shiny::isolate({
-          DT::datatable(data(), options = list(scrollX = TRUE))
+          DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
     })
@@ -408,10 +410,11 @@ editDataServer <- function(id,
       data(data() %>%
              dplyr::mutate("{var}_integer":=as.integer(.data[[var]]))
       )
+      datanames(colnames(data()))
       selcol(paste(var, "_integer"))
       output$dtable <- DT::renderDT({
         shiny::isolate({
-          DT::datatable(data(), options = list(scrollX = TRUE))
+          DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
     })
@@ -421,10 +424,11 @@ editDataServer <- function(id,
       data(data() %>%
              dplyr::mutate("{var}_double":=as.double(.data[[var]]))
       )
+      datanames(colnames(data()))
       selcol(paste(var, "_double"))
       output$dtable <- DT::renderDT({
         shiny::isolate({
-          DT::datatable(data(), options = list(scrollX = TRUE))
+          DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
     })
@@ -434,10 +438,11 @@ editDataServer <- function(id,
       data(data() %>%
              dplyr::mutate("{var}_character":=as.character(.data[[var]]))
       )
+      datanames(colnames(data()))
       selcol(paste(var, "_character"))
       output$dtable <- DT::renderDT({
         shiny::isolate({
-          DT::datatable(data(), options = list(scrollX = TRUE))
+          DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
     })
@@ -447,10 +452,11 @@ editDataServer <- function(id,
       data(data() %>%
              dplyr::mutate("{var}_factor":=as.factor(.data[[var]]))
       )
+      datanames(colnames(data()))
       selcol(paste(var, "_factor"))
       output$dtable <- DT::renderDT({
         shiny::isolate({
-          DT::datatable(data(), options = list(scrollX = TRUE))
+          DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
     })
@@ -460,10 +466,11 @@ editDataServer <- function(id,
       data(data() %>%
              dplyr::mutate("{var}_numeric":=as.numeric(.data[[var]]))
       )
+      datanames(colnames(data()))
       selcol(paste(var, "_numeric"))
       output$dtable <- DT::renderDT({
         shiny::isolate({
-          DT::datatable(data(), options = list(scrollX = TRUE))
+          DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
     })
@@ -474,10 +481,11 @@ editDataServer <- function(id,
              dplyr::mutate(weekend=as.factor((
                lubridate::wday(.data[[var]], week_start = 1) > 5)*1))
       )
-      selcol(input$name)
+      datanames(colnames(data()))
+      selcol('weekend')
       output$dtable <- DT::renderDT({
         shiny::isolate({
-          DT::datatable(data(), options = list(scrollX = TRUE))
+          DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
     })
@@ -487,10 +495,11 @@ editDataServer <- function(id,
       data(data() %>%
              dplyr::mutate(cumsum=cumsum(.data[[var]]))
       )
-      selcol(input$name)
+      datanames(colnames(data()))
+      selcol('cumsum')
       output$dtable <- DT::renderDT({
         shiny::isolate({
-          DT::datatable(data(), options = list(scrollX = TRUE))
+          DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
     })
@@ -540,7 +549,7 @@ editDataServer <- function(id,
       selcol(sprintf("%s_dup", var))
       output$dtable <- DT::renderDT({
         shiny::isolate({
-          DT::datatable(data(), options = list(scrollX = TRUE))
+          DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
     })
@@ -555,7 +564,7 @@ editDataServer <- function(id,
         selcol(input$name)
         output$dtable <- DT::renderDT({
           shiny::isolate({
-            DT::datatable(data(), options = list(scrollX = TRUE))
+            DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
           })
         })
       }
@@ -571,7 +580,7 @@ editDataServer <- function(id,
       selcol(input$name)
       output$dtable <- DT::renderDT({
         shiny::isolate({
-          DT::datatable(data(), options = list(scrollX = TRUE))
+          DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
     })
@@ -583,7 +592,7 @@ editDataServer <- function(id,
       selcol(input$name)
       output$dtable <- DT::renderDT({
         shiny::isolate({
-          DT::datatable(data(), options = list(scrollX = TRUE))
+          DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
     })
