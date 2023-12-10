@@ -32,7 +32,7 @@ infoUi <- function(id) {
                                     label = NULL,
                                     grid = TRUE,
                                     force_edges = TRUE,
-                                    choices = 1:9,
+                                    choices = c(-9:-2,1:9),
                                     selected = 8
                                    )
                                  ),
@@ -46,7 +46,7 @@ infoUi <- function(id) {
                                                label = NULL,
                                                grid = TRUE,
                                                force_edges = TRUE,
-                                               choices = 1:9,
+                                               choices = c(-9:-2,1:9),
                                                selected = 3
                                              )
                                ),
@@ -60,7 +60,7 @@ infoUi <- function(id) {
                                                label = NULL,
                                                grid = TRUE,
                                                force_edges = TRUE,
-                                               choices = 1:9,
+                                               choices = c(-9:-2,1:9),
                                                selected = 2
                                              )
                                ),
@@ -74,8 +74,8 @@ infoUi <- function(id) {
                                                 label = NULL,
                                                 grid = TRUE,
                                                 force_edges = TRUE,
-                                                choices = 1:9,
-                                                selected = 3
+                                                choices = c(-9:-2,1:9),
+                                                selected = -3
                                               )
                                 ),
                                 shiny::column(3, 'Aktuálnost dostupných dat'),
@@ -88,8 +88,8 @@ infoUi <- function(id) {
                                                 label = NULL,
                                                 grid = TRUE,
                                                 force_edges = TRUE,
-                                                choices = 1:9,
-                                                selected = 4
+                                                choices = c(-9:-2,1:9),
+                                                selected = -4
                                               )
                                 ),
                                 shiny::column(3, 'Míra vlivu prediktoru'),
@@ -103,8 +103,8 @@ infoUi <- function(id) {
                                                label = NULL,
                                                grid = TRUE,
                                                force_edges = TRUE,
-                                               choices = 1:9,
-                                               selected = 2
+                                               choices = c(-9:-2,1:9),
+                                               selected = -2
                                              )
                                ),
                                shiny::column(3, 'Míra vlivu prediktoru'),
@@ -155,10 +155,18 @@ infoServer <- function(id) {
     si <- reactiveVal()
 
     observe({
-      saatyMatrix(matrix(c(1,input$slider1,input$slider2,input$slider3,
-               1/input$slider1,1,1/input$slider4,1/input$slider5,
-               1/input$slider2,input$slider4,1,1/input$slider6,
-               1/input$slider3,input$slider5,input$slider6,1),4,4))
+
+      slider1 <- if(input$slider1 >= 1) input$slider1 else -1/input$slider1
+      slider2 <- if(input$slider2 >= 1) input$slider2 else -1/input$slider2
+      slider3 <- if(input$slider3 >= 1) input$slider3 else -1/input$slider3
+      slider4 <- if(input$slider4 >= 1) input$slider4 else -1/input$slider4
+      slider5 <- if(input$slider5 >= 1) input$slider5 else -1/input$slider5
+      slider6 <- if(input$slider6 >= 1) input$slider6 else -1/input$slider6
+
+      saatyMatrix(matrix(c(1,slider1,slider2,slider3,
+               1/slider1,1,slider4,slider5,
+               1/slider2,1/slider4,1,slider6,
+               1/slider3,1/slider5,1/slider6,1),4,4))
       si(Saaty(saatyMatrix()))
 
       if(!is.null(input$table1)) {
