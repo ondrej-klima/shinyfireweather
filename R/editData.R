@@ -296,6 +296,15 @@ editDataServer <- function(id,
           shiny::actionButton(shiny::NS(id, 'buttonRLE'), 'RLE'),
           shiny::actionButton(shiny::NS(id, 'buttonCumsum'), 'Kumulované součty'))),
       shiny::fluidRow(
+        shiny::column(12,
+                      shiny::actionButton(shiny::NS(id, 'buttonAsDate'), 'Jako datum'),
+                      shiny::actionButton(shiny::NS(id, 'buttonAsFactor'), 'Jako faktor'),
+                      shiny::actionButton(shiny::NS(id, 'buttonAsString'), 'Jako text'),
+                      shiny::actionButton(shiny::NS(id, 'buttonAsInteger'), 'Jako integer'),
+                      shiny::actionButton(shiny::NS(id, 'buttonAsDouble'), 'Jako double'),
+                      shiny::actionButton(shiny::NS(id, 'buttonAsNumeric'), 'Jako číslo')
+        )),
+      shiny::fluidRow(
         shiny::column(4,
                       shiny::selectInput(shiny::NS(id, 'selectCol2'),
                                          'Použít data ze sloupce',
@@ -369,9 +378,9 @@ editDataServer <- function(id,
     shiny::observeEvent(input$buttonDateSplit, {
       var <- colnames(db())[1]
       data(data() %>%
-            dplyr::mutate(day=as.factor(stringr::str_sub(as.character(date), 9, 10))) %>%
-            dplyr::mutate(month=as.factor(stringr::str_sub(as.character(date), 6, 7))) %>%
-            dplyr::mutate(year=as.factor(stringr::str_sub(as.character(date), 1, 4)))
+            dplyr::mutate(day=as.factor(stringr::str_sub(as.character(.data[[var]]), 9, 10))) %>%
+            dplyr::mutate(month=as.factor(stringr::str_sub(as.character(.data[[var]]), 6, 7))) %>%
+            dplyr::mutate(year=as.factor(stringr::str_sub(as.character(.data[[var]]), 1, 4)))
           )
       selcol(input$name)
       output$dtable <- DT::renderDT({
