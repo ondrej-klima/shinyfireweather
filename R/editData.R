@@ -59,6 +59,28 @@ editDataServer <- function(id,
     selcol <- shiny::reactiveVal()
 
     proxy <- DT::dataTableProxy("dtable")
+    dataHistory <- reactiveVal(list(NULL))
+    historyCount <- reactiveVal(1)
+
+    observeEvent(input$undo, {
+      if(length(dataHistory()) > 0) {
+        data(dataHistory()[[length(dataHistory())-1]])
+        dataHistory(dataHistory()[-length(dataHistory())])
+        loadTable()
+      }
+    })
+
+    setData <- function(newdata) {
+      if(historyCount() >= 50) {
+        dataHistory(dataHistory()[-1])
+        historyCount(historyCount() - 1)
+      }
+      tmp <- dataHistory()
+      tmp[[historyCount() + 1]] <- newdata
+      dataHistory(tmp)
+      historyCount(historyCount() + 1)
+      data(newdata)
+    }
 
     output$dtable <- DT::renderDT({
       DT::datatable(NULL, options = list(scrollX = TRUE), selection="none")
@@ -153,12 +175,12 @@ editDataServer <- function(id,
     }
 
     shiny::observeEvent(input$loadExample, {
-      data(exampleData)
+      setData(exampleData)
       loadTable()
     })
 
     shiny::observeEvent(input$buttonJoin, {
-      data(dplyr::left_join(
+      setData(dplyr::left_join(
         switch(input$joinDataChoice1,
                 "Data 1" = data1$data(),
                 "Data 2" = data2$data(),
@@ -198,7 +220,7 @@ editDataServer <- function(id,
     })
 
     shiny::observeEvent(input$loadenv, {
-      data(get(input$envar, envir = globalenv()))
+      setData(get(input$envar, envir = globalenv()))
       loadTable()
       output$checkboxUi <- shiny::renderUI({})
     })
@@ -225,7 +247,7 @@ editDataServer <- function(id,
       }
       else if(ext == "csv") {
         output$checkboxUi <- shiny::renderUI({})
-        data(read.csv2(input$upload$datapath))
+        setData(read.csv2(input$upload$datapath))
         loadTable()
       }
     })
@@ -240,14 +262,14 @@ editDataServer <- function(id,
           lst[[i]] <- getMeteoData(input$uploadMultiple[[i, 'datapath']], name)
         }
       })
-      data(dplyr::bind_rows(lst))
+      setData(dplyr::bind_rows(lst))
       loadTable()
     })
 
     sheetNames <- shiny::reactiveVal()
 
     shiny::observeEvent(input$confirm, {
-      data({
+      setData({
         r <- NULL
         shiny::withProgress({
           for(sheet in input$checkboxes) {
@@ -274,6 +296,10 @@ editDataServer <- function(id,
     output$selectColumn <- shiny::renderUI({
       shiny::fluidPage(
       shiny::fluidRow(shiny::column(4,
+                                    shiny::actionButton(shiny::NS(id, "undo"),
+                                    "Vrátit akci",
+                                    shiny::icon('undo')))),
+      shiny::fluidRow(shiny::column(4,
                       shiny::selectInput(shiny::NS(id, 'selectInput'),
                                          'Upravit sloupec',
                                          datanames(),
@@ -283,7 +309,7 @@ editDataServer <- function(id,
       ),
       shiny::fluidRow(shiny::column(12,
                                     shiny::actionButton(shiny::NS(id, 'buttonDuplicate'), 'Duplikovat'),
-                                    shiny::actionButton(shiny::NS(id, 'buttonDrop'), 'Zrušit soupec'),
+                                    shiny::actionButton(shiny::NS(id, 'buttonDrop'), 'Zrušit sloupec'),
                                     shiny::actionButton(shiny::NS(id, 'buttonRename'), 'Přejmenovat'))),
       shiny::fluidRow(shiny::column(12,
       #htmltools::div(style="display: inline-block", class = "row-fluid",
@@ -334,7 +360,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonAggregate, {
       if(length(input$buttonAggregate) > 0) {
-        data(data() %>%
+        setData(data() %>%
                dplyr::group_by_at(input$aggregateCols) %>%
                dplyr::summarize(n = dplyr::n()))
         loadTable()
@@ -342,7 +368,7 @@ editDataServer <- function(id,
     })
 
     shiny::observeEvent(input$importTabButton, {
-      data(switch(input$dataChoice,
+      setData(switch(input$dataChoice,
                   "Data 1" = data1$data(),
                   "Data 2" = data2$data(),
                   "Data 3" = data3$data(),
@@ -370,14 +396,14 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonDate, {
       var <- colnames(db())[1]
-      data(data() %>% dplyr::mutate("{var}" := as.character(
+      setData(data() %>% dplyr::mutate("{var}" := as.character(
         openxlsx::convertToDate(.data[[var]]))))
       DT::replaceData(proxy, data(), resetPaging = FALSE)
     })
 
     shiny::observeEvent(input$buttonDateSplit, {
       var <- colnames(db())[1]
-      data(data() %>%
+      setData(data() %>%
             dplyr::mutate(day=as.factor(stringr::str_sub(as.character(.data[[var]]), 9, 10))) %>%
             dplyr::mutate(month=as.factor(stringr::str_sub(as.character(.data[[var]]), 6, 7))) %>%
             dplyr::mutate(year=as.factor(stringr::str_sub(as.character(.data[[var]]), 1, 4)))
@@ -393,7 +419,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonAsDate, {
       var <- colnames(db())[1]
-      data(data() %>%
+      setData(data() %>%
              dplyr::mutate("{var}_date":=as.Date(.data[[var]]))
       )
       datanames(colnames(data()))
@@ -407,7 +433,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonAsInteger, {
       var <- colnames(db())[1]
-      data(data() %>%
+      setData(data() %>%
              dplyr::mutate("{var}_integer":=as.integer(.data[[var]]))
       )
       datanames(colnames(data()))
@@ -421,7 +447,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonAsDouble, {
       var <- colnames(db())[1]
-      data(data() %>%
+      setData(data() %>%
              dplyr::mutate("{var}_double":=as.double(.data[[var]]))
       )
       datanames(colnames(data()))
@@ -435,7 +461,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonAsString, {
       var <- colnames(db())[1]
-      data(data() %>%
+      setData(data() %>%
              dplyr::mutate("{var}_character":=as.character(.data[[var]]))
       )
       datanames(colnames(data()))
@@ -449,7 +475,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonAsFactor, {
       var <- colnames(db())[1]
-      data(data() %>%
+      setData(data() %>%
              dplyr::mutate("{var}_factor":=as.factor(.data[[var]]))
       )
       datanames(colnames(data()))
@@ -463,7 +489,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonAsNumeric, {
       var <- colnames(db())[1]
-      data(data() %>%
+      setData(data() %>%
              dplyr::mutate("{var}_numeric":=as.numeric(.data[[var]]))
       )
       datanames(colnames(data()))
@@ -477,7 +503,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonWeekend, {
       var <- colnames(db())[1]
-      data(data() %>%
+      setData(data() %>%
              dplyr::mutate(weekend=as.factor((
                lubridate::wday(.data[[var]], week_start = 1) > 5)*1))
       )
@@ -492,7 +518,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonCumsum, {
       var <- colnames(db())[1]
-      data(data() %>%
+      setData(data() %>%
              dplyr::mutate(cumsum=cumsum(.data[[var]]))
       )
       datanames(colnames(data()))
@@ -506,7 +532,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonFilter, {
       var <- colnames(db())[1]
-      data(switch(input$operator,
+      setData(switch(input$operator,
                   '==' = data() %>%
                     dplyr::filter(.data[[var]] == input$filterValue),
                   '!=' = data() %>%
@@ -528,7 +554,7 @@ editDataServer <- function(id,
     shiny::observeEvent(input$buttonFill, {
       var <- colnames(db())[1]
       varSrc <- input$selectCol2
-      data(data() %>% dplyr::mutate(
+      setData(data() %>% dplyr::mutate(
         "{var}" := dplyr::coalesce(.data[[var]], .data[[varSrc]]))
         )
       DT::replaceData(proxy, data(), resetPaging = FALSE)
@@ -536,7 +562,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonFill0, {
       var <- colnames(db())[1]
-      data(data() %>% dplyr::mutate(
+      setData(data() %>% dplyr::mutate(
         "{var}" := dplyr::coalesce(as.double(.data[[var]]), 0))
       )
       DT::replaceData(proxy, data(), resetPaging = FALSE)
@@ -544,7 +570,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonDuplicate, {
       var <- colnames(db())[1]
-      data(data() %>% dplyr::mutate("{var}_dup" := .data[[var]]))
+      setData(data() %>% dplyr::mutate("{var}_dup" := .data[[var]]))
       datanames(colnames(data()))
       selcol(sprintf("%s_dup", var))
       output$dtable <- DT::renderDT({
@@ -557,7 +583,7 @@ editDataServer <- function(id,
     shiny::observeEvent(input$buttonRename, {
       var <- colnames(db())[1]
       if(input$name != var) {
-        data(data() %>%
+        setData(data() %>%
                dplyr::mutate("{input$name}" := .data[[var]]) %>%
                dplyr::select(-var))
         datanames(colnames(data()))
@@ -572,7 +598,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonRLE, {
       var <- colnames(db())[1]
-      data(data() %>%
+      setData(data() %>%
              dplyr::group_by(area) %>%
              dplyr::arrange(date) %>%
              dplyr::mutate("{input$name}" := (.data[[var]] == 0) * unlist(lapply(rle(.data[[var]] != 0)$lengths, seq_len)))
@@ -587,7 +613,7 @@ editDataServer <- function(id,
 
     shiny::observeEvent(input$buttonDrop, {
       var <- colnames(db())[1]
-      data(data() %>% dplyr::select(-var))
+      setData(data() %>% dplyr::select(-var))
       datanames(colnames(data()))
       selcol(input$name)
       output$dtable <- DT::renderDT({
@@ -608,7 +634,7 @@ editDataServer <- function(id,
                     LBK = "Liberecký")
 
       for(an in names(areas)) {
-        data(data() %>% dplyr::mutate("{var}" := ifelse(
+        setData(data() %>% dplyr::mutate("{var}" := ifelse(
           grepl(accentless(areas[an]), accentless(.data[[var]]), fixed = TRUE),
           an,
           .data[[var]])) %>% dplyr::mutate("{var}" := ifelse(
@@ -626,7 +652,7 @@ editDataServer <- function(id,
       var <- colnames(db())[1]
       val <- db()[info$row, info$col]
       # https://yihui.shinyapps.io/DT-edit/
-      data(data() %>% dplyr::mutate("{var}" := ifelse(.data[[var]] == val,
+      setData(data() %>% dplyr::mutate("{var}" := ifelse(.data[[var]] == val,
                                                info$value,
                                                .data[[var]])))
 
