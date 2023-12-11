@@ -42,7 +42,7 @@ ARIMAModelUi <- function(id) {
 #' This function provides server for the data edit table.
 #' @importFrom magrittr "%>%"
 #'
-ARIMAModelServer <- function(id, data1, data2, data3, data4) {
+ARIMAModelServer <- function(id, saved, data1, data2, data3, data4) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- reactiveVal()
     predictData <- reactiveVal()
@@ -71,7 +71,8 @@ ARIMAModelServer <- function(id, data1, data2, data3, data4) {
                         shiny::selectInput(
                           shiny::NS(id, "dataChoice"),
                           "Zdroj dat",
-                          choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+                          choices = c("Data 1", "Data 2", "Data 3", "Data 4"),
+                          selected = saved$saved$input[["ARIMA-dataChoice"]]
                         )),
           shiny::column(4, shiny::uiOutput(NS(id, "factors1a"))),
           shiny::column(4, shiny::uiOutput(NS(id, "factors1b")))
@@ -101,9 +102,11 @@ ARIMAModelServer <- function(id, data1, data2, data3, data4) {
                  "Data 4" = data4$data()))
 
       output$factors1a <- renderUI({shiny::selectInput(shiny::NS(id,"var"), "Vysvětlovaná proměnná",
-                                                       choices = colnames(data()))})
+                                                       choices = colnames(data()),
+                                                       selected = saved$saved$input[["ARIMA-var"]])})
       output$factors1b <- renderUI({shiny::selectInput(shiny::NS(id,"date"), "Sloupec s datumy",
-                                                       choices = colnames(data()))})
+                                                       choices = colnames(data()),
+                                                       selected = saved$saved$input[["ARIMA-date"]])})
       output$factors2 <- renderUI({
         shiny::fluidRow(
           shiny::column(4,
@@ -111,7 +114,7 @@ ARIMAModelServer <- function(id, data1, data2, data3, data4) {
               shiny::NS(id, "confidenceLevels"),
               "Intervaly spolehlivosti",
               choices = c("99%", "95%", "90%", "80%"),
-              selected = "95%"
+              selected = saved$saved$input[["ARIMA-confidenceLevels"]]
             )
           ),
           shiny::column(4,

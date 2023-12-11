@@ -45,7 +45,7 @@ PAModelUi <- function(id) {
 #' This function provides server for the data edit table.
 #' @importFrom magrittr "%>%"
 #'
-PAModelServer <- function(id, data1, data2, data3, data4) {
+PAModelServer <- function(id, saved, data1, data2, data3, data4) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- reactiveVal()
     predictData <- reactiveVal()
@@ -64,7 +64,8 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
             shiny::selectInput(
               shiny::NS(id, "dataChoice"),
               "Zdroj dat",
-             choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+             choices = c("Data 1", "Data 2", "Data 3", "Data 4"),
+             selected = saved$saved$input[["PAModel-dataChoice"]]
             )),
           shiny::column(4, shiny::uiOutput(NS(id, "factors1a"))),
           shiny::column(4, shiny::uiOutput(NS(id, "factors1b")))
@@ -96,19 +97,22 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
 
       output$factors1a <- renderUI({
         shiny::selectInput(shiny::NS(id,"var"), "Vysvětlovaná proměnná",
-                         choices = colnames(data()))
+                         choices = colnames(data()),
+                         selected = saved$saved$input[["PAModel-var"]])
         })
 
       output$factors1b <- renderUI({
         shiny::selectInput(shiny::NS(id,"date"), "Sloupec s datumy",
-                         choices = colnames(data()))
+                         choices = colnames(data()),
+                         selected = saved$saved$input[["PAModel-date"]])
       })
 
       output$factors2 <-renderUI({
         shiny::fluidRow(
           shiny::column(4,
           shiny::selectInput(shiny::NS(id,"area"), "Sloupec s kraji",
-                             choices = colnames(data()))),
+                             choices = colnames(data()),
+                             selected = saved$saved$input[["PAModel-area"]])),
           shiny::column(4,
           shiny::uiOutput(shiny::NS(id, 'areaui'))),
           shiny::column(4,
@@ -116,7 +120,7 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
             shiny::NS(id, "confidenceLevels"),
             "Intervaly spolehlivosti",
             choices = c("99%", "95%", "90%", "80%"),
-            selected = "95%"
+            selected = saved$saved$input[["PAModel-confidenceLevels"]]
           )),
           shiny::column(4,
           shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Vytvořit"))
@@ -132,7 +136,8 @@ PAModelServer <- function(id, data1, data2, data3, data4) {
       tryCatch({
       output$areaui <- renderUI({
         shiny::selectInput(shiny::NS(id,"areacode"), "Kraj",
-                           choices = unique(data()[[input$area]]))
+                           choices = unique(data()[[input$area]]),
+                           selected = saved$saved$input[["PAModel-areacode"]])
       })
       }, error = function(cond) {
         shiny::showNotification(conditionMessage(cond), type="error")

@@ -42,7 +42,7 @@ ARIMAextModelUi <- function(id) {
 #' This function provides server for the data edit table.
 #' @importFrom magrittr "%>%"
 #'
-ARIMAextModelServer <- function(id, data1, data2, data3, data4) {
+ARIMAextModelServer <- function(id, saved, data1, data2, data3, data4) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- reactiveVal()
     predictData <- reactiveVal()
@@ -70,7 +70,8 @@ ARIMAextModelServer <- function(id, data1, data2, data3, data4) {
                         shiny::selectInput(
                           shiny::NS(id, "dataChoice"),
                           "Zdroj dat",
-                          choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+                          choices = c("Data 1", "Data 2", "Data 3", "Data 4"),
+                          selected = saved$saved$input[["ARIMAext-dataChoice"]]
                         )),
           shiny::column(4, shiny::uiOutput(NS(id, "factors1a"))),
           shiny::column(4, shiny::uiOutput(NS(id, "factors1b")))
@@ -101,11 +102,13 @@ ARIMAextModelServer <- function(id, data1, data2, data3, data4) {
 
       output$factors1a <- renderUI({
           shiny::selectInput(shiny::NS(id,"var"), "Vysvětlovaná proměnná",
-                             choices = colnames(data()))
+                             choices = colnames(data()),
+                             selected = saved$saved$input[["ARIMAext-var"]])
       })
       output$factors1b <- renderUI({
           shiny::selectInput(shiny::NS(id,"date"), "Sloupec s datumy",
-                             choices = colnames(data()))
+                             choices = colnames(data()),
+                             selected = saved$saved$input[["ARIMAext-date"]])
       })
 
       output$factors2 <- renderUI({
@@ -114,7 +117,8 @@ ARIMAextModelServer <- function(id, data1, data2, data3, data4) {
             shiny::selectInput(
               shiny::NS(id,"regressor"),
               "Externí regresor",
-              choices = colnames(data())
+              choices = colnames(data()),
+              selected = saved$saved$input[["ARIMAext-regressor"]]
             )
           ),
           shiny::column(4,
@@ -122,7 +126,7 @@ ARIMAextModelServer <- function(id, data1, data2, data3, data4) {
               shiny::NS(id, "confidenceLevels"),
               "Intervaly spolehlivosti",
               choices = c("99%", "95%", "90%", "80%"),
-              selected = "95%"
+              selected = saved$saved$input[["ARIMAext-confidenceLevels"]]
             )
           ),
           shiny::column(4,
