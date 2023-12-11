@@ -48,12 +48,12 @@ server <- function(input, output, session) {
   c4 <- PAModelServer('PAModel', data1, data2, data3, data4)
   c5 <- ARIMAModelServer('ARIMA', data1, data2, data3, data4)
   c6 <- ARIMAextModelServer('ARIMAext', data1, data2, data3, data4)
-  c7 <- DailyPoissonServer('DailyPoisson', data1, data2, data3, data4)
-  c8 <- DailyQuasiPoissonServer('DailyQuasiPoisson', data1, data2, data3, data4)
-  c9 <- DailyBootstrapServer('DailyBootstrap', data1, data2, data3, data4)
-  c10 <- MonthlyPoissonServer('MonthlyPoisson', data1, data2, data3, data4)
-  c11 <- MonthlyQuasiPoissonServer('MonthlyQuasiPoisson', data1, data2, data3, data4)
-  c12 <- MonthlyBootstrapServer('MonthlyBootstrap', data1, data2, data3, data4)
+  c7 <- DailyPoissonServer('DailyPoisson', saved=saved, data1, data2, data3, data4)
+  c8 <- DailyQuasiPoissonServer('DailyQuasiPoisson', saved=saved, data1, data2, data3, data4)
+  c9 <- DailyBootstrapServer('DailyBootstrap', saved=saved, data1, data2, data3, data4)
+  c10 <- MonthlyPoissonServer('MonthlyPoisson', saved=saved, data1, data2, data3, data4)
+  c11 <- MonthlyQuasiPoissonServer('MonthlyQuasiPoisson', saved=saved, data1, data2, data3, data4)
+  c12 <- MonthlyBootstrapServer('MonthlyBootstrap', saved=saved, data1, data2, data3, data4)
 
   CostsEvaluationServer('CostsEvaluation', c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12)
 

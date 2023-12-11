@@ -33,7 +33,7 @@ DailyQuasiPoissonUi <- function(id) {
 #' This function provides server for the data edit table.
 #' @importFrom magrittr "%>%"
 #'
-DailyQuasiPoissonServer <- function(id, data1, data2, data3, data4) {
+DailyQuasiPoissonServer <- function(id, saved, data1, data2, data3, data4) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- reactiveVal()
     predictData <- reactiveVal()
@@ -45,6 +45,21 @@ DailyQuasiPoissonServer <- function(id, data1, data2, data3, data4) {
     fit <- reactiveVal()
     cnames <- reactiveVal()
 
+    observeEvent(saved$saved, ignoreInit = TRUE, {
+      tryCatch({
+        saved_input <- saved$saved
+        shiny::updateSelectInput(session, "dataChoice", selected = saved_input$input[["DailyQuasiPoisson-dataChoice"]])
+        shiny::updateSelectInput(session, "var", selected = saved_input$input[["DailyQuasiPoisson-var"]])
+        shiny::updateSelectInput(session, "date", selected = saved_input$input[["DailyQuasiPoisson-date"]])
+        shiny::updateSelectInput(session, "area", selected = saved_input$input[["DailyQuasiPoisson-area"]])
+        shiny::updateSelectInput(session, "areacode", selected = saved_input$input[["DailyQuasiPoisson-areacode"]])
+        shiny::updateSelectInput(session, "confidenceLevels", selected = saved_input$input[["DailyQuasiPoisson-confidenceLevels"]])
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
+    })
+
 
     output$checkboxUi <- renderUI({
       shiny::fluidRow(
@@ -53,7 +68,8 @@ DailyQuasiPoissonServer <- function(id, data1, data2, data3, data4) {
                         shiny::selectInput(
                           shiny::NS(id, "dataChoice"),
                           "Zdroj dat",
-                          choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+                          choices = c("Data 1", "Data 2", "Data 3", "Data 4"),
+                          selected = saved$saved$input[["DailyQuasiPoisson-dataChoice"]]
                         ))),
         shiny::column(3,
                       shiny::uiOutput(NS(id, "varUi"))),
@@ -68,7 +84,7 @@ DailyQuasiPoissonServer <- function(id, data1, data2, data3, data4) {
                         shiny::NS(id, "confidenceLevels"),
                         "Invervaly spolehlivosti",
                         choices = c("99%", "95%", "90%", "80%"),
-                        selected = "95%"
+                        selected = saved$saved$input[["DailyQuasiPoisson-confidenceLevels"]]
                       )),
         shiny::column(3,
                       shiny::HTML("&nbsp;<br />"),
@@ -96,21 +112,24 @@ DailyQuasiPoissonServer <- function(id, data1, data2, data3, data4) {
       output$varUi <- shiny::renderUI(
         shiny::selectInput(
           shiny::NS(id,"var"), "Vysvětlovaná proměnná",
-          choices = colnames(data())
+          choices = colnames(data()),
+          selected = saved$saved$input[["DailyQuasiPoisson-var"]]
         )
       )
 
       output$dateUi <- shiny::renderUI(
         shiny::selectInput(
           shiny::NS(id,"date"), "Sloupec s datumy",
-          choices = colnames(data())
+          choices = colnames(data()),
+          selected = saved$saved$input[["DailyQuasiPoisson-date"]]
         )
       )
 
       output$areaColUi <- shiny::renderUI(
         shiny::selectInput(
           shiny::NS(id,"area"), "Sloupec s kraji",
-          choices = colnames(data())
+          choices = colnames(data()),
+          selected = saved$saved$input[["DailyQuasiPoisson-area"]]
         )
       )
       }, error = function(cond) {
@@ -123,7 +142,8 @@ DailyQuasiPoissonServer <- function(id, data1, data2, data3, data4) {
       tryCatch({
       output$areaui <- renderUI({
         shiny::selectInput(shiny::NS(id,"areacode"), "Kraj",
-                           choices = unique(data()[[input$area]]))
+                           choices = unique(data()[[input$area]]),
+                           selected = saved$saved$input[["DailyQuasiPoisson-areacode"]])
       })
       }, error = function(cond) {
         shiny::showNotification(conditionMessage(cond), type="error")
