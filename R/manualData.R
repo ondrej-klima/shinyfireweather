@@ -48,7 +48,7 @@ ManualDataServer <- function(id,
                            data3 = NULL,
                            data4 = NULL) {
   shiny::moduleServer(id, function (input, output, session) {
-    data <- reactiveVal()
+    data <- reactiveVal(as.data.frame(NULL))
 
     observeEvent(saved$saved, ignoreInit = TRUE, {
       tryCatch({
