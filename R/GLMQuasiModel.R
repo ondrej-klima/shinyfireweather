@@ -139,7 +139,7 @@ GLMQuasiModelUi <- function(id) {
 #' This function provides server for the data edit table.
 #' @importFrom magrittr "%>%"
 #'
-GLMQuasiModelServer <- function(id, data1, data2, data3, data4, data5) {
+GLMQuasiModelServer <- function(id, saved, data1, data2, data3, data4, data5) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- reactiveVal()
     predictData <- reactiveVal()
@@ -148,6 +148,16 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4, data5) {
     ci <- reactiveVal()
     predCi <- reactiveVal()
     formula <- reactiveVal()
+    loaded <- reactiveVal(FALSE)
+
+    observeEvent(saved$saved, ignoreInit = TRUE, {
+      tryCatch({
+        loaded(TRUE)
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
+    })
 
     output$checkboxUi <- renderUI({
       shiny::fluidRow(
@@ -155,7 +165,8 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4, data5) {
                shiny::selectInput(
                  shiny::NS(id, "dataChoice"),
                  "Zdroj dat",
-                 choices = c("Data 1", "Data 2", "Data 3", "Data 4")
+                 choices = c("Data 1", "Data 2", "Data 3", "Data 4"),
+                 selected = saved$saved$input[["GLMQModel-dataChoice"]]
                )
         ),
         column(4,
@@ -175,7 +186,8 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4, data5) {
         shiny::column(4, shiny::selectInput(
           shiny::NS(id, "dataChoicePredict"),
           "Zdroj dat",
-          choices = c("Data 1", "Data 2", "Data 3", "Data 4", "Manuálně zadaná data")
+          choices = c("Data 1", "Data 2", "Data 3", "Data 4", "Manuálně zadaná data"),
+          selected = saved$saved$input[["GLMQModel-dataChoicePredict"]]
         )),
         shiny::actionButton(shiny::NS(id, "buttonPredict"), label = "Predikovat"),
         DT::DTOutput(shiny::NS(id, "dtable"))
@@ -240,9 +252,9 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4, data5) {
       output$predictParamsUi <- renderUI({
         shiny::fluidPage(
           shiny::fluidRow(
-            shiny::column(4, shiny::selectInput(shiny::NS(id, "pDate"), 'Sloupec s datumy', colnames(data()))),
+            shiny::column(4, shiny::selectInput(shiny::NS(id, "pDate"), 'Sloupec s datumy', colnames(data()), selected = saved$saved$input[["GLMQModel-pDate"]])),
             shiny::column(4, shiny::dateRangeInput(shiny::NS(id, "pDateRange"), 'Časové rozmezí')),
-            shiny::column(4, shiny::selectInput(shiny::NS(id, "pArea"), 'Sloupec s kraji', colnames(data())))
+            shiny::column(4, shiny::selectInput(shiny::NS(id, "pArea"), 'Sloupec s kraji', colnames(data()), selected = saved$saved$input[["GLMQModel-pArea"]]))
           ),
           shiny::fluidRow(
             shiny::column(4, shiny::uiOutput(shiny::NS(id, "pAreaValUi"))),
@@ -274,6 +286,18 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4, data5) {
                   "Data 3" = data3$data(),
                   "Data 4" = data4$data()))
 
+      #if((is.null(saved$saved$input[["GLMQModel-rank_list_1"]]) && is.null(saved$saved$input[["GLMQModel-rank_list_2"]]))) {
+         #|| (length(saved$saved$input[["GLMQModel-rank_list_1"]])==0 && length(saved$saved$input[["GLMQModel-rank_list_1"]]))==0) {
+      if(!loaded()) {
+        r1labels = colnames(data())
+        r2labels = NULL
+      }
+      else {
+        r1labels = saved$saved$input[["GLMQModel-rank_list_1"]]
+        r2labels = saved$saved$input[["GLMQModel-rank_list_2"]]
+        loaded(FALSE)
+      }
+
       output$bucket <- shiny::renderUI({
         sortable::bucket_list(
           header = "Přetáhněte názvy sloupců mezi prediktory",
@@ -281,13 +305,12 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4, data5) {
           orientation = "horizontal",
           sortable::add_rank_list(
             text = "Sloupce s proměnnými",
-            labels = colnames(data()
-            ),
+            labels = r1labels,
             input_id = shiny::NS(id,"rank_list_1")
           ),
           sortable::add_rank_list(
             text = "Prediktory",
-            labels = NULL,
+            labels = r2labels,
             input_id = shiny::NS(id,"rank_list_2")
           )
         )
@@ -296,7 +319,8 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4, data5) {
       output$factors <- renderUI({
         htmltools::tagList(
           shiny::selectInput(shiny::NS(id,"var"), "Vysvětlovaná proměnná",
-                             choices = colnames(data())
+                             choices = colnames(data()),
+                             selected = saved$saved$input[["GLMQModel-var"]]
           )
           #shiny::checkboxGroupInput(shiny::NS(id,"cols"),
           #                          "Factors",
@@ -366,9 +390,9 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4, data5) {
       output$fit <- renderUI({
         shiny::fluidPage(
           shiny::fluidRow(
-            shiny::column(4, shiny::selectInput(shiny::NS(id, "date"), 'Sloupec s datumy', colnames(data()))),
+            shiny::column(4, shiny::selectInput(shiny::NS(id, "date"), 'Sloupec s datumy', colnames(data()), selected = saved$saved$input[["GLMQModel-date"]])),
             shiny::column(4, shiny::dateRangeInput(shiny::NS(id, "dateRange"), 'Časové rozmezí')),
-            shiny::column(4, shiny::selectInput(shiny::NS(id, "area"), 'Sloupec s kraji', colnames(data())))
+            shiny::column(4, shiny::selectInput(shiny::NS(id, "area"), 'Sloupec s kraji', colnames(data()), selected = saved$saved$input[["GLMQModel-area"]]))
           ),
           shiny::fluidRow(
             shiny::column(4, shiny::uiOutput(shiny::NS(id, "areaValUi"))),
@@ -397,7 +421,8 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4, data5) {
       output$areaValUi <- renderUI({
         shiny::selectInput(shiny::NS(id, "areaVal"),
                            'Kraj',
-                           unique(data()[[input$area]]))
+                           unique(data()[[input$area]]),
+                           selected = saved$saved$input[["GLMQModel-areaVal"]])
       })
       }, error = function(cond) {
         shiny::showNotification(conditionMessage(cond), type="error")
@@ -410,7 +435,8 @@ GLMQuasiModelServer <- function(id, data1, data2, data3, data4, data5) {
       output$pAreaValUi <- renderUI({
         shiny::selectInput(shiny::NS(id, "pAreaVal"),
                            'Kraj',
-                           unique(data()[[input$pArea]]))
+                           unique(data()[[input$pArea]]),
+                           selected = saved$saved$input[["GLMQModel-pAreaVal"]])
       })
       }, error = function(cond) {
         shiny::showNotification(conditionMessage(cond), type="error")

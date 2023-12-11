@@ -42,9 +42,9 @@ server <- function(input, output, session) {
 
 
 
-  c1 <- LModelServer('LModel', data1, data2, data3, data4, data5)
-  c2 <- GLModelServer('GLModel', data1, data2, data3, data4, data5)
-  c3 <- GLMQuasiModelServer('GLMQModel', data1, data2, data3, data4, data5)
+  c1 <- LModelServer('LModel', saved=saved, data1, data2, data3, data4, data5)
+  c2 <- GLModelServer('GLModel', saved=saved, data1, data2, data3, data4, data5)
+  c3 <- GLMQuasiModelServer('GLMQModel', saved=saved, data1, data2, data3, data4, data5)
   c4 <- PAModelServer('PAModel', saved=saved, data1, data2, data3, data4)
   c5 <- ARIMAModelServer('ARIMA', saved=saved, data1, data2, data3, data4)
   c6 <- ARIMAextModelServer('ARIMAext', saved=saved, data1, data2, data3, data4)
