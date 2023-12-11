@@ -79,7 +79,10 @@ ui <- function() {
       ),
       bs4Dash::menuItem(htmltools::HTML("Opatření k redukci<br>rizik"),
                         icon = shiny::icon("wallet", verify_fa = FALSE),
-                        tabName = "tabCostsEvaluation")
+                        tabName = "tabCostsEvaluation"),
+      bs4Dash::menuItem(htmltools::HTML("O aplikaci"),
+                        icon = shiny::icon("address-card", verify_fa = FALSE),
+                        tabName = "tabAbout")
     )),
     bs4Dash::dashboardBody(
       bs4Dash::tabItems(
@@ -101,9 +104,10 @@ ui <- function() {
         bs4Dash::tabItem(tabName = 'tabMonthlyQuasiPoisson', MonthlyQuasiPoissonUi('MonthlyQuasiPoisson')),
         bs4Dash::tabItem(tabName = 'tabMonthlyBootstrap', MonthlyBootstrapUi('MonthlyBootstrap')),
         bs4Dash::tabItem(tabName = 'tabCostsEvaluation', CostsEvaluationUi('CostsEvaluation')),
-        bs4Dash::tabItem(tabName = 'tabManual', ManualDataUi('manualData')
+        bs4Dash::tabItem(tabName = 'tabManual', ManualDataUi('manualData')),
+        bs4Dash::tabItem(tabName = 'tabAbout', AboutUi('about'))
         #bs4Dash::tabItem(tabName = 'tabMap', leaflet::leafletOutput('map')
-        )
+
       )
     )
   )
