@@ -64,7 +64,16 @@ editDataServer <- function(id,
     historyCount <- reactiveVal(1)
 
     observeEvent(saved$saved, ignoreInit = TRUE, {
-      #print(shiny::NS(id, "test"))
+      tryCatch({
+        saved_input <- saved$saved
+        if(!is.null(saved_input[[paste0(id, "_data")]])) {
+          data(saved_input[[paste0(id, "_data")]])
+          loadTable()
+        }
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     observeEvent(input$undo, {

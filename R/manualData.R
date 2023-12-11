@@ -42,12 +42,41 @@ ManualDataUi <- function(id) {
 }
 
 ManualDataServer <- function(id,
+                           saved = NULL,
                            data1 = NULL,
                            data2 = NULL,
                            data3 = NULL,
                            data4 = NULL) {
   shiny::moduleServer(id, function (input, output, session) {
     data <- reactiveVal()
+
+    observeEvent(saved$saved, ignoreInit = TRUE, {
+      tryCatch({
+        saved_input <- saved$saved
+        if(!is.null(saved_input$manual_data)) {
+          data(saved_input$manual_data)
+        }
+        shiny::updateSelectInput(session, "data", selected = saved_input$input[["manualData-data"]])
+        shiny::updateNumericInput(session, "nrows", value = saved_input$input[["manualData-nrows"]])
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
+    })
+
+    output$table <- rhandsontable::renderRHandsontable({
+      rhandsontable::rhandsontable(
+        data = data(),
+        rowHeaders = TRUE,
+        contextMenu = TRUE,
+        stretchH = "all",
+        width = '100%',
+        height = 300,
+        manualColumnResize = TRUE,
+        manualRowResize = TRUE
+      )
+    })
+
     observeEvent(input$load, {
       tryCatch({
       df <- switch(input$data,
@@ -61,18 +90,7 @@ ManualDataServer <- function(id,
           df <- df %>% dplyr::add_row()
         }
 
-        output$table <- rhandsontable::renderRHandsontable({
-          rhandsontable::rhandsontable(
-            data = df,
-            rowHeaders = TRUE,
-            contextMenu = TRUE,
-            stretchH = "all",
-            width = '100%',
-            height = 300,
-            manualColumnResize = TRUE,
-            manualRowResize = TRUE
-          )
-        })
+        data(df)
       }
       }, error = function(cond) {
         shiny::showNotification(conditionMessage(cond), type="error")

@@ -34,6 +34,7 @@ server <- function(input, output, session) {
                             data4 = data4,
                             exampleCaption = "Údaje o počtu migrantů.")
   data5 <- ManualDataServer('manualData',
+                            saved = saved,
                             data1 = data1,
                             data2 = data2,
                             data3 = data3,
@@ -66,10 +67,14 @@ server <- function(input, output, session) {
       if (nrow(fileinfo) > 0) {
         nsaved <- list()
         nsaved[['input']] <- shiny::reactiveValuesToList(input)
-        nsaved[['data1']] <- data1$data()
         nsaved[['info_data0']] <- info$data0()
         nsaved[['info_data']] <- info$data()
         nsaved[['info_data3']] <- info$data3()
+        nsaved[['data1_data']] <- data1$data()
+        nsaved[['data2_data']] <- data2$data()
+        nsaved[['data3_data']] <- data3$data()
+        nsaved[['data4_data']] <- data4$data()
+        nsaved[['manual_data']] <- data5$data()
         saveRDS(nsaved, file=fileinfo$datapath)
         shiny::showNotification("Projekt byl uložen.", type="message")
       }
