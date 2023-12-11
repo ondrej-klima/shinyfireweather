@@ -92,6 +92,7 @@ server <- function(input, output, session) {
       fileinfo <- shinyFiles::parseFilePaths(volumes, input$open)
       if (nrow(fileinfo) > 0) {
         saved$saved <- readRDS(fileinfo$datapath)
+        shiny::showNotification("Projekt byl načten.", type="message")
       }
     }, error = function(cond) {
       shiny::showNotification(conditionMessage(cond), type="error")
