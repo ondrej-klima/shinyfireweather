@@ -55,7 +55,7 @@ server <- function(input, output, session) {
   c11 <- MonthlyQuasiPoissonServer('MonthlyQuasiPoisson', saved=saved, data1, data2, data3, data4)
   c12 <- MonthlyBootstrapServer('MonthlyBootstrap', saved=saved, data1, data2, data3, data4)
 
-  CostsEvaluationServer('CostsEvaluation', c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12)
+  ceval <- CostsEvaluationServer('CostsEvaluation', saved, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12)
 
   volumes <- c("UserFolder"="D:/")
   shinyFiles::shinyFileChoose(input, "open", roots=volumes, session=session, filetypes=c('rds'))
@@ -75,6 +75,9 @@ server <- function(input, output, session) {
         nsaved[['data3_data']] <- data3$data()
         nsaved[['data4_data']] <- data4$data()
         nsaved[['manual_data']] <- data5$data()
+        nsaved[['ceval_df1']] <- ceval$df1()
+        nsaved[['ceval_df2']] <- ceval$df2()
+        nsaved[['ceval_df3']] <- ceval$df3()
         saveRDS(nsaved, file=fileinfo$datapath)
         shiny::showNotification("Projekt byl uložen.", type="message")
       }

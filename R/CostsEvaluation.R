@@ -30,11 +30,98 @@ CostsEvaluationUi <- function(id) {
 #' This function provides server for the data edit table.
 #' @importFrom magrittr "%>%"
 #'
-CostsEvaluationServer <- function(id,
+CostsEvaluationServer <- function(id, saved,
                                   c1, c2, c3, c4,
                                   c5, c6, c7, c8,
                                   c9, c10, c11, c12) {
   shiny::moduleServer(id, function (input, output, session) {
+
+
+    observeEvent(saved$saved, ignoreInit = TRUE, {
+      tryCatch({
+        if(!is.null(saved$saved$ceval_df1)) {
+          df1(saved$saved$ceval_df1)
+
+          output$table1 <- rhandsontable::renderRHandsontable(
+            rhandsontable::rhandsontable(
+              data = df1(),
+              rowHeaders = TRUE,
+              contextMenu = FALSE,
+              stretchH = "all",
+              width = '100%',
+              height = 800,
+              colWidths = c(100, 250, 50, 50, 50),
+              colHeaders = c("Scénář", "Opatření", "Horní hranice", "Dolní hranice", "Pravděpodobnost"),
+              manualColumnResize = TRUE,
+              manualRowResize = TRUE,
+            ) %>%
+              rhandsontable::hot_rows(rowHeights = 50) %>%
+              rhandsontable::hot_col(c(1,3,4,5), readOnly = T) %>%
+              rhandsontable::hot_row(seq(1,14,2), readOnly = T)
+          )
+        }
+        if(!is.null(saved$saved$ceval_df2)) {
+          df2(saved$saved$ceval_df2)
+
+          output$table2 <- rhandsontable::renderRHandsontable(
+            rhandsontable::rhandsontable(
+              data = df2(),
+              rowHeaders = TRUE,
+              contextMenu = FALSE,
+              stretchH = "all",
+              width = '100%',
+              height = 800,
+              colWidths = c(100, 250, 50, 50, 50, 50, 50, 50, 50),
+              colHeaders = c("Scénář", "Opatření", "Horní hranice", "Dolní hranice",
+                             "Pravděpodobnost", 'Náklady na realizaci opatření',
+                             'Očekávaná škoda', 'EL', 'BCR'),
+              manualColumnResize = TRUE,
+              manualRowResize = TRUE,
+            ) %>%
+              rhandsontable::hot_rows(rowHeights = 50) %>%
+              rhandsontable::hot_col(1, readOnly = T) %>%
+              rhandsontable::hot_col(2, readOnly = T) %>%
+              rhandsontable::hot_col(3, readOnly = T) %>%
+              rhandsontable::hot_col(4, readOnly = T) %>%
+              rhandsontable::hot_col(5, readOnly = T) %>%
+              rhandsontable::hot_col("EL", readOnly = T) %>%
+              rhandsontable::hot_col("BCR", readOnly = T)
+          )
+        }
+        if(!is.null(saved$saved$ceval_df3)) {
+          df3(saved$saved$ceval_df3)
+
+          output$table3 <- rhandsontable::renderRHandsontable(
+            rhandsontable::rhandsontable(
+              data = df3(),
+              rowHeaders = TRUE,
+              contextMenu = FALSE,
+              stretchH = "all",
+              width = '100%',
+              height = 800,
+              colWidths = c(100, 250, 50, 50, 50, 50, 50, 50, 50),
+              colHeaders = c("Scénář", "Opatření", "Horní hranice", "Dolní hranice",
+                             "Pravděpodobnost", 'Náklady na realizaci opatření',
+                             'Očekávaná škoda', 'RPN', 'BCR'),
+              manualColumnResize = TRUE,
+              manualRowResize = TRUE,
+            ) %>%
+              rhandsontable::hot_rows(rowHeights = 50) %>%
+              rhandsontable::hot_col(1, readOnly = T) %>%
+              rhandsontable::hot_col(2, readOnly = T) %>%
+              rhandsontable::hot_col(3, readOnly = T) %>%
+              rhandsontable::hot_col(4, readOnly = T) %>%
+              rhandsontable::hot_col(5, readOnly = T) %>%
+              rhandsontable::hot_col("RPN", readOnly = T) %>%
+              rhandsontable::hot_col("BCR", readOnly = T)
+          )
+        }
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
+    })
+
     labelsCosts <- c(
      '0: Náklady do 1 mil. Kč za zvolenou jednotku času',
      '1: Náklady do 10 mil. Kč. za zvolenou jednotku času',
@@ -129,6 +216,7 @@ CostsEvaluationServer <- function(id,
           shiny::selectInput(
             shiny::NS(id, "dataChoice"),
             "Použít výsledky následujícího modelu",
+            selected = saved$saved$input[["CostsEvaluation-dataChoice"]],
             choices = c(
               "",
               "Lineární model",
@@ -152,8 +240,8 @@ CostsEvaluationServer <- function(id,
           shiny::fluidRow(
             #shiny::column(6, shiny::uiOutput(NS(id, "lowUi"))),
             #shiny::column(6, shiny::uiOutput(shiny::NS(id, 'highUi'))),
-            shiny::column(6, shiny::numericInput(shiny::NS(id, "lowernormval"), "Spodní hranice", 0)),
-            shiny::column(6, shiny::numericInput(shiny::NS(id, 'uppernormval'), "Horní hranice", 100)),
+            shiny::column(6, shiny::numericInput(shiny::NS(id, "lowernormval"), "Spodní hranice", value = saved$saved$input[["CostsEvaluation-lowernormval"]])),
+            shiny::column(6, shiny::numericInput(shiny::NS(id, 'uppernormval'), "Horní hranice", value = saved$saved$input[["CostsEvaluation-uppernormval"]]))
             #shiny::column(6, shiny::actionButton(shiny::NS(id, "buttonLearn"), label = "Create"))
             )
         )
@@ -401,6 +489,12 @@ CostsEvaluationServer <- function(id,
         NA
       })
     })
-
+    return(
+      list(
+        df1 = df1,
+        df2 = df2,
+        df3 = df3
+      )
+    )
   })
 }
