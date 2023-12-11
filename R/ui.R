@@ -10,6 +10,10 @@ ui <- function() {
     bs4Dash::dashboardHeader(title = bs4Dash::dashboardBrand('KSpredict', image='figures/sticker.png', opacity=1, href='https://github.com/ondrej-klima/shinyfireweather/tree/main')),
     bs4Dash::dashboardSidebar(
       bs4Dash::sidebarMenu(
+        #shiny::actionButton('buttonOpen', 'Otevřít projekt'),
+        shinyFiles::shinyFilesButton("open", 'Otevřít projekt..', 'Otevřít projekt..', FALSE, filetype=list(rda='rds')),
+        shinyFiles::shinySaveButton("save", "Uložit projekt jako..", "Uložit projekt jako..", filetype=list(rda='rds')),
+        #shiny::actionButton('buttonSave', 'Uložit projekt'),
         bs4Dash::menuSubItem("Cíl predikce",
                                     tabName = "tabInfo",
                                     icon = shiny::icon("info", verify_fa = FALSE)),

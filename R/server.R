@@ -7,26 +7,27 @@
 #' @param session Shiny stuff
 
 server <- function(input, output, session) {
-  infoServer('info')
-  data1 <- editDataServer('data1', exampleData = shinyfireweather::fires,
+  info <- infoServer('info', saved=saved)
+  saved <- reactiveValues(saved = NULL)
+  data1 <- editDataServer('data1', saved=saved, exampleData = shinyfireweather::fires,
                             data1 = data1,
                             data2 = data2,
                             data3 = data3,
                             data4 = data4,
                             exampleCaption = "Počty požárů v závislosti na datu a kraji.")
-  data2 <- editDataServer('data2', exampleData = shinyfireweather::weather,
+  data2 <- editDataServer('data2', saved=saved, exampleData = shinyfireweather::weather,
                             data1 = data1,
                             data2 = data2,
                             data3 = data3,
                             data4 = data4,
                             exampleCaption = "Počasí v jednotlivých krajích pro každý den.")
-  data3 <- editDataServer('data3', exampleData = shinyfireweather::joined,
+  data3 <- editDataServer('data3', saved=saved, exampleData = shinyfireweather::joined,
                             data1 = data1,
                             data2 = data2,
                             data3 = data3,
                             data4 = data4,
                             exampleCaption = "Počet požárů pro každý kalendářní den, včetně počasí.")
-  data4 <- editDataServer('data4', exampleData = shinyfireweather::migrants,
+  data4 <- editDataServer('data4', saved=saved, exampleData = shinyfireweather::migrants,
                             data1 = data1,
                             data2 = data2,
                             data3 = data3,
@@ -55,12 +56,47 @@ server <- function(input, output, session) {
 
   CostsEvaluationServer('CostsEvaluation', c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12)
 
-  # https://www.jla-data.net/cze/package-rczechia/
-  output$map <- leaflet::renderLeaflet({
-    leaflet::leaflet() %>%
-      leaflet::addProviderTiles(leaflet::providers$OpenStreetMap) %>%
-      leaflet::addPolygons(data = RCzechia::kraje(),
-                           color = "black",
-                           weight = 1)
+  volumes <- c("UserFolder"="D:/")
+  shinyFiles::shinyFileChoose(input, "open", roots=volumes, session=session, filetypes=c('rds'))
+  shinyFiles::shinyFileSave(input, "save", roots=volumes, session=session, filetypes=c('rds'))
+
+  observeEvent(input$save, {
+    tryCatch({
+      fileinfo <- shinyFiles::parseSavePath(volumes, input$save)
+      if (nrow(fileinfo) > 0) {
+        nsaved <- list()
+        nsaved[['input']] <- shiny::reactiveValuesToList(input)
+        nsaved[['data1']] <- data1$data()
+        nsaved[['info_data0']] <- info$data0()
+        nsaved[['info_data']] <- info$data()
+        nsaved[['info_data3']] <- info$data3()
+        saveRDS(nsaved, file=fileinfo$datapath)
+        shiny::showNotification("Projekt byl uložen.", type="message")
+      }
+    }, error = function(cond) {
+      shiny::showNotification(conditionMessage(cond), type="error")
+      NA
+    })
   })
+
+  observeEvent(input$open, {
+    tryCatch({
+      fileinfo <- shinyFiles::parseFilePaths(volumes, input$open)
+      if (nrow(fileinfo) > 0) {
+        saved$saved <- readRDS(fileinfo$datapath)
+      }
+    }, error = function(cond) {
+      shiny::showNotification(conditionMessage(cond), type="error")
+      NA
+    })
+  })
+
+  # https://www.jla-data.net/cze/package-rczechia/
+  #output$map <- leaflet::renderLeaflet({
+  #  leaflet::leaflet() %>%
+  #    leaflet::addProviderTiles(leaflet::providers$OpenStreetMap) %>%
+  #    leaflet::addPolygons(data = RCzechia::kraje(),
+  #                         color = "black",
+  #                         weight = 1)
+  #})
 }

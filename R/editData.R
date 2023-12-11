@@ -48,6 +48,7 @@ editDataUi <- function(id) {
 #'
 editDataServer <- function(id,
                            exampleData=NULL,
+                           saved = NULL,
                            data1 = NULL,
                            data2 = NULL,
                            data3 = NULL,
@@ -61,6 +62,10 @@ editDataServer <- function(id,
     proxy <- DT::dataTableProxy("dtable")
     dataHistory <- reactiveVal(list(NULL))
     historyCount <- reactiveVal(1)
+
+    observeEvent(saved$saved, ignoreInit = TRUE, {
+      #print(shiny::NS(id, "test"))
+    })
 
     observeEvent(input$undo, {
       tryCatch({

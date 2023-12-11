@@ -37,7 +37,8 @@ Imports:
     boot,
     shinyWidgets,
     ciTools, 
-    progress
+    progress,
+    shinyFiles
 Depends: 
     R (>= 2.10)
 LazyData: true

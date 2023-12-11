@@ -140,7 +140,7 @@ infoUi <- function(id) {
 #' This function provides server for the data edit table.
 #' @importFrom magrittr "%>%"
 #'
-infoServer <- function(id) {
+infoServer <- function(id, saved) {
   shiny::moduleServer(id, function (input, output, session) {
     output$varui <- renderUI({
       htmltools::tagList(
@@ -149,6 +149,54 @@ infoServer <- function(id) {
           choices = c("Data 1", "Data 2", "Data 3", "Data 4")
         )
       )
+    })
+
+    observeEvent(saved$saved, ignoreInit = TRUE, {
+      tryCatch({
+      saved_input <- saved$saved
+      inp2 <- input
+
+      shinyWidgets::updateSliderTextInput(
+        session,
+        "slider1",
+        selected = saved_input$input[["info-slider1"]]
+      )
+      shinyWidgets::updateSliderTextInput(
+        session,
+        "slider2",
+        selected = saved_input$input[["info-slider2"]]
+      )
+      shinyWidgets::updateSliderTextInput(
+        session,
+        "slider3",
+        selected = saved_input$input[["info-slider3"]]
+      )
+      shinyWidgets::updateSliderTextInput(
+        session,
+        "slider4",
+        selected = saved_input$input[["info-slider4"]]
+      )
+      shinyWidgets::updateSliderTextInput(
+        session,
+        "slider5",
+        selected = saved_input$input[["info-slider5"]]
+      )
+      shinyWidgets::updateSliderTextInput(
+        session,
+        "slider6",
+        selected = saved_input$input[["info-slider6"]]
+      )
+
+      if(!is.null(saved_input$info_data0))
+        data0(saved_input$info_data0)
+      if(!is.null(saved_input$info_data))
+        data(saved_input$info_data)
+      if(!is.null(saved_input$info_data3))
+        data3(saved_input$info_data3)
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
     })
 
     saatyMatrix <- reactiveVal()
@@ -293,12 +341,12 @@ infoServer <- function(id) {
         contextMenu = FALSE,
         stretchH = "all",
         width = '100%',
-        height = 800,
+        height = 600,
         colWidths = c(200, 200),
         manualColumnResize = TRUE,
         manualRowResize = TRUE,
       ) %>%
-        rhandsontable::hot_rows(rowHeights = 150)
+        rhandsontable::hot_rows(rowHeights = 250)
     })
 
 
@@ -367,14 +415,23 @@ infoServer <- function(id) {
         contextMenu = TRUE,
         stretchH = "all",
         width = '100%',
-        height = 800,
+        height = 700,
         colWidths = c(200, 500),
         manualColumnResize = TRUE,
         manualRowResize = TRUE,
       ) %>%
-        rhandsontable::hot_rows(rowHeights = 50)
+        rhandsontable::hot_rows(rowHeights = 100)
     })
 
+    observeEvent(input$table0, {
+      df = rhandsontable::hot_to_r(input$table0)
+      data0(df)
+    })
+
+    observeEvent(input$table3, {
+      df = rhandsontable::hot_to_r(input$table3)
+      data3(df)
+    })
 
     observeEvent(input$table1, {
       df = rhandsontable::hot_to_r(input$table1)
@@ -402,5 +459,13 @@ infoServer <- function(id) {
 
     # https://stackoverflow.com/questions/53177158/shiny-rhandsontable-that-is-reactive-to-itself
     # https://github.com/jrowen/rhandsontable/issues/287
+
+    return(
+      list(
+        data0 = data0,
+        data = data,
+        data3 = data3
+      )
+    )
   })
 }
