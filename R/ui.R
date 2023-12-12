@@ -4,7 +4,9 @@
 
 ui <- function() {
 
-  shiny::addResourcePath('figures', 'inst/figures/')
+  
+  #shiny::addResourcePath('figures', 'inst/figures/')
+  shiny::addResourcePath('figures', system.file('inst/figures', package='shinyfireweather'))
 
   bs4Dash::dashboardPage(
     bs4Dash::dashboardHeader(title = bs4Dash::dashboardBrand('KSpredict', image='figures/sticker.png', opacity=1, href='https://github.com/ondrej-klima/shinyfireweather/tree/main')),
