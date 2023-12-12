@@ -371,6 +371,7 @@ editDataServer <- function(id,
           shiny::actionButton(shiny::NS(id, 'buttonDate'), 'Opravit Excelové datum'),
           shiny::actionButton(shiny::NS(id, 'buttonDateSplit'), 'Rozdělit datum'),
           shiny::actionButton(shiny::NS(id, 'buttonWeekend'), 'Přidat víkendy'),
+          shiny::actionButton(shiny::NS(id, 'buttonDays'), 'Přidat dny v roce'),
           shiny::actionButton(shiny::NS(id, 'buttonArea'), 'Převést kraje na zkratky'))),
       shiny::fluidRow(shiny::column(12,
           shiny::actionButton(shiny::NS(id, 'buttonRLE'), 'RLE'),
@@ -619,6 +620,28 @@ editDataServer <- function(id,
           DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
         })
       })
+      }, error = function(cond) {
+        shiny::showNotification(conditionMessage(cond), type="error")
+        NA
+      })
+    })
+
+
+    shiny::observeEvent(input$buttonDays, {
+      tryCatch({
+        var <- colnames(db())[1]
+        setData(data() %>%
+                  dplyr::mutate(dayInYear=as.factor(
+                    lubridate::yday(as.Date(.data[[var]]))
+                  ))
+        )
+        datanames(colnames(data()))
+        selcol('dayInYear')
+        output$dtable <- DT::renderDT({
+          shiny::isolate({
+            DT::datatable(data(), options = list(scrollX = TRUE), selection="none")
+          })
+        })
       }, error = function(cond) {
         shiny::showNotification(conditionMessage(cond), type="error")
         NA
