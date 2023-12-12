@@ -57,7 +57,7 @@ server <- function(input, output, session) {
 
   ceval <- CostsEvaluationServer('CostsEvaluation', saved, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12)
 
-  volumes <- c("UserFolder"="D:/")
+  volumes <- c("UserFolder"="C:/")
   shinyFiles::shinyFileChoose(input, "open", roots=volumes, session=session, filetypes=c('rds'))
   shinyFiles::shinyFileSave(input, "save", roots=volumes, session=session, filetypes=c('rds'))
 

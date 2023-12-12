@@ -216,10 +216,10 @@ GLModelServer <- function(id, saved, data1, data2, data3, data4, data5) {
                       type="response")#,
                      # se.fit = TRUE)
 
-      p1<-ciTools::add_pi(newdata, mod1.glm.glm(), names = c("lower99", "upper99"), alpha = 0.01, nsims = 10000)
-      p2<-ciTools::add_pi(newdata, mod1.glm.glm(), names = c("lower95", "upper95"), alpha = 0.05, nsims = 10000)
-      p3<-ciTools::add_pi(newdata, mod1.glm.glm(), names = c("lower90", "upper90"), alpha = 0.1, nsims = 10000)
-      p4<-ciTools::add_pi(newdata, mod1.glm.glm(), names = c("lower80", "upper80"), alpha = 0.2, nsims = 10000)
+      p1<-ciTools::add_pi(newdata, mod1.glm.glm(), names = c("lower99", "upper99"), alpha = 0.01, nsims = 10000, na.rm = TRUE)
+      p2<-ciTools::add_pi(newdata, mod1.glm.glm(), names = c("lower95", "upper95"), alpha = 0.05, nsims = 10000, na.rm = TRUE)
+      p3<-ciTools::add_pi(newdata, mod1.glm.glm(), names = c("lower90", "upper90"), alpha = 0.1, nsims = 10000, na.rm = TRUE)
+      p4<-ciTools::add_pi(newdata, mod1.glm.glm(), names = c("lower80", "upper80"), alpha = 0.2, nsims = 10000, na.rm = TRUE)
 
       pi <- cbind(p1['lower99'],
                   p1['upper99'],
