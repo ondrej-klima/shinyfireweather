@@ -340,6 +340,7 @@ CostsEvaluationServer <- function(id, saved,
           for (i in 1:dim(X)[1]){
             X[i,"BCR"]<-(X[i,"EL"]-X[which(X[,"scenario"]==X[i,"scenario"])[1],"EL"])/
               X[i,"costs"]
+            X[i,"BCR"]<-abs(X[i,"BCR"])
           }
 
           X[seq(1,dim(X)[1],2), "BCR"] <- NA
@@ -372,6 +373,7 @@ CostsEvaluationServer <- function(id, saved,
         for (i in 1:dim(X)[1]){
           X[i,"BCR"]<-(X[i,"RPN"]-X[which(X[,"scenario"]==X[i,"scenario"])[1],"RPN"])/
             10^X2[i,"costs"]
+          X[i,"BCR"] <- abs(X[i,"BCR"])
         }
         #X[,"RPN"]<-X[,"prob"]*X[,"conseq"]
         #for (i in 1:dim(X)[1]){
